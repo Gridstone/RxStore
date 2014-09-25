@@ -33,6 +33,11 @@ android {
     }
 }
 
+dependencies {
+    compile 'com.netflix.rxjava:rxjava-android:0.20.4'
+    compile 'com.google.code.gson:gson:2.3'
+}
+
 android.libraryVariants.all { variant ->
     def name = variant.buildType.name
     if (!BuilderConstants.DEBUG.equals(name)) {
