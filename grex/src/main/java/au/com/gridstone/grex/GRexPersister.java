@@ -56,10 +56,10 @@ public class GRexPersister {
         this.dirName = dirName;
     }
 
-    public <T> Observable<Boolean> putList(final String key, final List<T> list, final Class<T> type) {
-        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+    public <T> Observable<List<T>> putList(final String key, final List<T> list, final Class<T> type) {
+        return Observable.create(new Observable.OnSubscribe<List<T>>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void call(Subscriber<? super List<T>> subscriber) {
                 Type listType = new ListOfSomething<>(type);
                 Writer writer = null;
 
@@ -69,7 +69,7 @@ public class GRexPersister {
                     gson.toJson(list, listType, writer);
 
                     if (!subscriber.isUnsubscribed()) {
-                        subscriber.onNext(true);
+                        subscriber.onNext(list);
                         subscriber.onCompleted();
                     }
                 } catch (IOException e) {
@@ -133,7 +133,7 @@ public class GRexPersister {
         });
     }
 
-    public <T> Observable<Boolean> addToList(final String key, final T object, final Class<T> type) {
+    public <T> Observable<List<T>> addToList(final String key, final T object, final Class<T> type) {
         return getList(key, type)
                 .map(new Func1<List<T>, List<T>>() {
                     @Override
@@ -143,36 +143,54 @@ public class GRexPersister {
                         return list;
                     }
                 })
-                .flatMap(new Func1<List<T>, Observable<Boolean>>() {
+                .flatMap(new Func1<List<T>, Observable<List<T>>>() {
                     @Override
-                    public Observable<Boolean> call(List<T> list) {
+                    public Observable<List<T>> call(List<T> list) {
                         return putList(key, list, type);
                     }
                 });
     }
 
-    public <T> Observable<Boolean> removeFromList(final String key, final T object, final Class<T> type) {
+    public <T> Observable<List<T>> removeFromList(final String key, final T object, final Class<T> type) {
         return getList(key, type)
                 .map(new Func1<List<T>, List<T>>() {
                     @Override
                     public List<T> call(List<T> list) {
-                        list = new ArrayList<T>(list);
+                        list = new ArrayList<>(list);
                         list.remove(object);
                         return list;
                     }
                 })
-                .flatMap(new Func1<List<T>, Observable<Boolean>>() {
+                .flatMap(new Func1<List<T>, Observable<List<T>>>() {
                     @Override
-                    public Observable<Boolean> call(List<T> list) {
+                    public Observable<List<T>> call(List<T> list) {
                         return putList(key, list, type);
                     }
                 });
     }
 
-    public <T> Observable<Boolean> put(final String key, final T object) {
-        return Observable.create(new Observable.OnSubscribe<Boolean>() {
+    public <T> Observable<List<T>> removeFromList(final String key, final int position, final Class<T> type) {
+        return getList(key, type)
+                .map(new Func1<List<T>, List<T>>() {
+                    @Override
+                    public List<T> call(List<T> list) {
+                        list = new ArrayList<>(list);
+                        list.remove(position);
+                        return list;
+                    }
+                })
+                .flatMap(new Func1<List<T>, Observable<List<T>>>() {
+                    @Override
+                    public Observable<List<T>> call(List<T> list) {
+                        return putList(key, list, type);
+                    }
+                });
+    }
+
+    public <T> Observable<T> put(final String key, final T object) {
+        return Observable.create(new Observable.OnSubscribe<T>() {
             @Override
-            public void call(Subscriber<? super Boolean> subscriber) {
+            public void call(Subscriber<? super T> subscriber) {
                 Writer writer = null;
 
                 try {
@@ -181,7 +199,7 @@ public class GRexPersister {
                     gson.toJson(object, writer);
 
                     if (!subscriber.isUnsubscribed()) {
-                        subscriber.onNext(true);
+                        subscriber.onNext(object);
                         subscriber.onCompleted();
                     }
 
