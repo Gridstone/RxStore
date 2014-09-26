@@ -58,6 +58,12 @@ public class GRexPersister {
         this(context, dirName, new Gson());
     }
 
+    /**
+     * Create a new instances using a provided Gson.
+     * @param context Context used to determine file directory.
+     * @param dirName The sub directory name to perform all read/write operations to.
+     * @param gson Gson used to serialize/deserialize objects.
+     */
     public GRexPersister(Context context, String dirName, Gson gson) {
         this.context = context.getApplicationContext();
         this.gson = gson;
@@ -70,7 +76,7 @@ public class GRexPersister {
      * @param key  The key to store the List against.
      * @param list The List to store.
      * @param type The class of each item stored in the List.
-     * @return An Observable the returns the written list in its onNext().
+     * @return An Observable that returns the written list in its onNext().
      */
     public <T> Observable<List<T>> putList(final String key, final List<T> list, final Class<T> type) {
         return Observable.create(new Observable.OnSubscribe<List<T>>() {
@@ -112,7 +118,8 @@ public class GRexPersister {
      *
      * @param key  The key that the List is stored against.
      * @param type The type of each item stored in the List.
-     * @return An Observable that returns the read list in its onNext(). If no stored List is found, an immutable empty List will be returned.
+     * @return An Observable that returns the read list in its onNext(). If no stored List is found,
+     * an immutable empty List will be returned.
      */
     public <T> Observable<List<T>> getList(final String key, final Class<T> type) {
         return Observable.create(new Observable.OnSubscribe<List<T>>() {
@@ -159,9 +166,10 @@ public class GRexPersister {
     /**
      * Adds an object to an existing List, or creates and stores a new List.
      *
-     * @param key The key that the List is stored against. (Or will be stored against if its currently empty).
+     * @param key    The key that the List is stored against. (Or will be stored against if its
+     *               currently empty).
      * @param object The object to add to the List.
-     * @param type The type of each item in the List.
+     * @param type   The type of each item in the List.
      * @return An Observable of the new List written to disk.
      */
     public <T> Observable<List<T>> addToList(final String key, final T object, final Class<T> type) {
@@ -185,10 +193,11 @@ public class GRexPersister {
     /**
      * Remove an object from an existing List.
      *
-     * @param key The key that the List is stored against.
+     * @param key    The key that the List is stored against.
      * @param object The object to remove from the List.
-     * @param type The type of each item stored in the List.
-     * @return An Observable of the new List written to disk after the remove operation has occurred.
+     * @param type   The type of each item stored in the List.
+     * @return An Observable of the new List written to disk after the remove operation has
+     * occurred.
      */
     public <T> Observable<List<T>> removeFromList(final String key, final T object, final Class<T> type) {
         return getList(key, type)
@@ -211,10 +220,11 @@ public class GRexPersister {
     /**
      * Remove an object from an existing List by its index.
      *
-     * @param key The key that the List is stored against.
+     * @param key      The key that the List is stored against.
      * @param position The index of the item to remove.
-     * @param type The type of each item stored in the List.
-     * @return An Observable of the new List written to disk after the remove operation has occurred.
+     * @param type     The type of each item stored in the List.
+     * @return An Observable of the new List written to disk after the remove operation has
+     * occurred.
      */
     public <T> Observable<List<T>> removeFromList(final String key, final int position, final Class<T> type) {
         return getList(key, type)
@@ -237,7 +247,7 @@ public class GRexPersister {
     /**
      * Writes an object to disk.
      *
-     * @param key The key so store the object against.
+     * @param key    The key so store the object against.
      * @param object The object to write to disk.
      * @return An Observable of the object written to disk.
      */
@@ -275,7 +285,7 @@ public class GRexPersister {
     /**
      * Retrieves an object from disk.
      *
-     * @param key The key that the object is stored against.
+     * @param key  The key that the object is stored against.
      * @param type The type of the object stored on disk.
      * @return An observable of the retrieved object.
      */
