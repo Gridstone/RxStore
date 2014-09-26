@@ -18,13 +18,154 @@ package com.example.grex;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 
-import java.lang.Override;
+import com.example.grex.helpers.ArmLengthAdapter;
+import com.example.grex.helpers.DinoView;
+import com.example.grex.helpers.RandomDinoGenerator;
+
+import java.util.List;
+
+import au.com.gridstone.grex.GRexPersister;
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class ExampleActivity extends Activity {
+    private static final String PERSISTENCE_DIR = "grexPersistence";
+    private static final String KEY_SINGLE_DINO = "dino";
+    private static final String KEY_MULTI_DINOS = "dinoList";
+
+    @InjectView(R.id.single_dino_name)
+    TextView nameView;
+    @InjectView(R.id.single_dino_arm_length)
+    TextView armLengthView;
+    @InjectView(R.id.single_dino_name_input)
+    EditText nameInputView;
+    @InjectView(R.id.single_dino_arm_length_input)
+    Spinner armLengthSpinner;
+    @InjectView(R.id.dino_list_container)
+    ViewGroup dinoListContainer;
+
+    private GRexPersister dinoPersister;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_example);
+        ButterKnife.inject(this);
+        dinoPersister = new GRexPersister(this, PERSISTENCE_DIR);
+
+        loadDino();
+        loadDinoList();
+        setupInput();
+    }
+
+    private void loadDino() {
+        dinoPersister.get(KEY_SINGLE_DINO, Dino.class)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Dino>() {
+                    @Override
+                    public void call(Dino dino) {
+                        if (dino != null) {
+                            nameView.setText(dino.name);
+                            armLengthView.setText(dino.armLength + "cm");
+                        }
+                    }
+                });
+    }
+
+    private void loadDinoList() {
+        dinoPersister.getList(KEY_MULTI_DINOS, Dino.class)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<List<Dino>>() {
+                    @Override
+                    public void call(List<Dino> dinos) {
+                        displayDinoList(dinos);
+                    }
+                });
+    }
+
+    private void setupInput() {
+        final ArmLengthAdapter adapter = new ArmLengthAdapter(this);
+        armLengthSpinner.setAdapter(adapter);
+        armLengthSpinner.setSelection(ArmLengthAdapter.getPositionForValue(4));
+    }
+
+    private void displayDinoList(List<Dino> dinos) {
+        dinoListContainer.removeAllViews();
+
+        if (dinos == null) {
+            return;
+        }
+
+        LayoutInflater inflater = getLayoutInflater();
+
+        for (Dino dino : dinos) {
+            DinoView dinoView = (DinoView) inflater.inflate(R.layout.view_dino, dinoListContainer, false);
+            dinoView.nameView.setText(dino.name);
+            dinoView.armLengthView.setText(dino.armLength + "cm");
+            dinoListContainer.addView(dinoView);
+        }
+    }
+
+    @OnClick(R.id.single_object_persist_button)
+    public void onPersistClick() {
+        final Dino dino = new Dino();
+        dino.name = nameInputView.getText().toString();
+        dino.armLength = (Integer) armLengthSpinner.getSelectedItem();
+
+        dinoPersister.put(KEY_SINGLE_DINO, dino)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Dino>() {
+                    @Override
+                    public void call(Dino dino) {
+                        nameView.setText(dino.name);
+                        armLengthView.setText(dino.armLength + "cm");
+                    }
+                });
+    }
+
+    @OnClick(R.id.dino_list_add_button)
+    public void onAddDinoClick() {
+        dinoPersister.addToList(KEY_MULTI_DINOS, RandomDinoGenerator.spawn(), Dino.class)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<List<Dino>>() {
+                    @Override
+                    public void call(List<Dino> dinos) {
+                        displayDinoList(dinos);
+                    }
+                });
+    }
+
+    @OnClick(R.id.dino_list_remove_button)
+    public void onRemoveDinoClick() {
+        int dinoViewCount = dinoListContainer.getChildCount();
+
+        if (dinoViewCount < 1) {
+            return;
+        }
+
+        dinoPersister.removeFromList(KEY_MULTI_DINOS, dinoViewCount - 1, Dino.class)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<List<Dino>>() {
+                    @Override
+                    public void call(List<Dino> dinos) {
+                        displayDinoList(dinos);
+                    }
+                });
     }
 }

@@ -14,27 +14,31 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.application'
+package com.example.grex.helpers;
 
-dependencies {
-    compile project(':grex')
-    compile 'com.jakewharton:butterknife:5.1.2'
-}
+import com.example.grex.Dino;
 
-android {
-    compileSdkVersion 20
-    buildToolsVersion '20.0.0'
+import java.util.Random;
 
-    defaultConfig {
-        applicationId "com.example.grex"
-        minSdkVersion 15
-        targetSdkVersion 20
-        versionCode 1
-        versionName '1.0.0'
+/**
+ * @author Christopher Horner
+ */
+public class RandomDinoGenerator {
+    private static final String[] NAMES = {
+            "Twinkles", "Fluffy", "Tubs", "Bitey", "Rosie", "Dave", "Gregory", "Tabitha"
+    };
+
+    private RandomDinoGenerator() {
+        //No instances
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+    public static Dino spawn() {
+        Random random = new Random();
+        Dino dino = new Dino();
+
+        dino.name = NAMES[random.nextInt(NAMES.length)];
+        dino.armLength = random.nextInt(100);
+
+        return dino;
     }
 }

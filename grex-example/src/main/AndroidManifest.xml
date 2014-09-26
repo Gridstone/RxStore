@@ -27,7 +27,8 @@
 
 		<activity
 			android:name=".ExampleActivity"
-			android:label="G-Rex">
+			android:label="G-Rex"
+            android:windowSoftInputMode="stateHidden">
 
 			<intent-filter>
 

@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.application'
+package com.example.grex;
 
-dependencies {
-    compile project(':grex')
-    compile 'com.jakewharton:butterknife:5.1.2'
-}
+import android.content.Context;
 
-android {
-    compileSdkVersion 20
-    buildToolsVersion '20.0.0'
+import au.com.gridstone.grex.GRexPersister;
+import rx.Observable;
 
-    defaultConfig {
-        applicationId "com.example.grex"
-        minSdkVersion 15
-        targetSdkVersion 20
-        versionCode 1
-        versionName '1.0.0'
+/**
+ * @author Christopher Horner
+ */
+public class DinoPersister extends GRexPersister {
+    private static final String KEY_DINO = "dino";
+
+    public DinoPersister(Context context) {
+        super(context, "dinoPersister");
     }
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+    public Observable<Dino> getDino() {
+        return get(KEY_DINO, Dino.class);
     }
 }

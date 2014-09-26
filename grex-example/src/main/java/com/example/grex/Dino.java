@@ -14,27 +14,12 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.application'
+package com.example.grex;
 
-dependencies {
-    compile project(':grex')
-    compile 'com.jakewharton:butterknife:5.1.2'
-}
-
-android {
-    compileSdkVersion 20
-    buildToolsVersion '20.0.0'
-
-    defaultConfig {
-        applicationId "com.example.grex"
-        minSdkVersion 15
-        targetSdkVersion 20
-        versionCode 1
-        versionName '1.0.0'
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
+/**
+ * @author Christopher Horner
+ */
+public class Dino {
+    public String name;
+    public int armLength;
 }
