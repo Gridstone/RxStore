@@ -39,7 +39,7 @@ import rx.functions.Func1;
 import static android.content.Context.MODE_PRIVATE;
 
 /**
- * Facilities the read and write of objects to and from an application's private directory.
+ * Facilitates the read and write of objects to and from an application's private directory.
  *
  * @author Christopher Horner
  */

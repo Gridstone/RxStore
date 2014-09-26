@@ -1,7 +1,7 @@
 G-Rex
 =====
 
-A tiny library that assists in saving and restoring objects to disk using Gson and RxJava on Android.
+A tiny library that assists in saving and restoring objects to and from disk using Gson and RxJava on Android.
 
 ![](images/example.png)
 
@@ -14,9 +14,9 @@ There are [many options][1] for persisting data in Android, some easier than oth
 * Elaborate and enormous data sets? [SQLite][3] can help you, if that's your kind of thing...
 * Everything else? We just want to put and get objects from disk with minimal overhead.
 
-G-Rex is here to help. It's not doing anything fancy, it's probably code you've many times yourself. It just wants to help you with a task that can be tedious, allowing you to get on coding the fun stuff.
+G-Rex is here to help. It's not doing anything fancy; it's probably code you've written many times yourself. It just wants to help you with a task that can be tedious, allowing you to get on coding the fun stuff.
 
-G-Rex is most useful to those already using [Gson][4] and [RxJava][5] in their applications. Gson allows for simple serialization/deserialization of objects. RxJava helps alleviate threading concerns and allows for composition with exists method chains.
+G-Rex is most useful to those already using [Gson][4] and [RxJava][5] in their applications. Gson allows for simple serialization/deserialization of objects. RxJava helps alleviate threading concerns and allows for composition with existing method chains.
 
 Usage
 -----
@@ -72,7 +72,7 @@ webServices.getDino()
     .flatMap(new Func1<Dino, Observable<Dino>>() {
         @Override
         public Observable<Dino> call(Dino dino) {
-            return persister.put("dinoKey", dino`);
+            return persister.put("dinoKey", dino);
         }
     })
     .subscribeOn(Schedulers.io())
