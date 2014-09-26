@@ -247,7 +247,7 @@ public class GRexPersister {
     /**
      * Writes an object to disk.
      *
-     * @param key    The key so store the object against.
+     * @param key    The key to store the object against.
      * @param object The object to write to disk.
      * @return An Observable of the object written to disk.
      */
