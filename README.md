@@ -50,11 +50,11 @@ persister.put("dinoKey", dino)
 
 If you're an rxjava-android user, this code will look very familiar to you. The write operation will occur off the main thread, and we get informed of the completion back *on* the main thread.
 
-You could also store a List of toothy friends
+You could also store a `List` of toothy friends
 ```java
 List<Dino> dinos = getDinoList(); //Some method that returns an ArrayList of Dinos.
 
-persister.putList("dinoListKey", Dino.class)
+persister.putList("dinoListKey", dinos, Dino.class)
 	.subscribeOn(Schedulers.io())
 	.observeOn(AndroidSchedulers.mainThead())
 	.subscribe(new Observer<List<Dino>>() {
