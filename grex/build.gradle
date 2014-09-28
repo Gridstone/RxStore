@@ -16,7 +16,18 @@
 
 import com.android.builder.core.BuilderConstants;
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'org.robolectric:robolectric-gradle-plugin:0.13.0'
+    }
+}
+
 apply plugin: 'com.android.library'
+apply plugin: 'robolectric'
 
 android {
     compileSdkVersion 20
@@ -36,6 +47,8 @@ android {
 dependencies {
     compile 'com.netflix.rxjava:rxjava-android:0.20.4'
     compile 'com.google.code.gson:gson:2.3'
+    androidTestCompile 'org.robolectric:robolectric:2.3'
+    androidTestCompile 'junit:junit:4.11'
 }
 
 android.libraryVariants.all { variant ->
