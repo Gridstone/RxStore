@@ -89,7 +89,10 @@ webServices.getDino()
 Download
 --------
 
-TODO: Include jar and Gradle link after push to Maven Central
+Download [the latest JAR][7] or grab via Gradle:
+```groovy
+compile 'au.com.gridstone:grex:1.0.0'
+```
 
 License
 --------
@@ -114,3 +117,4 @@ License
  [4]: https://code.google.com/p/google-gson/
  [5]: https://github.com/ReactiveX/RxJava
  [6]: http://square.github.io/retrofit/
+ [7]: https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=au.com.gridstone&a=grex&v=LATEST
