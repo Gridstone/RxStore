@@ -49,6 +49,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3'
     androidTestCompile 'org.robolectric:robolectric:2.3'
     androidTestCompile 'junit:junit:4.11'
+    androidTestCompile 'org.assertj:assertj-core:1.6.1'
 }
 
 android.libraryVariants.all { variant ->

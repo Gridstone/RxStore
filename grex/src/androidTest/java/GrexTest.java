@@ -1,0 +1,156 @@
+/*
+ * Copyright (C) GRIDSTONE 2014
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.Robolectric;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import au.com.gridstone.grex.GRexPersister;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author Christopher Horner
+ */
+@RunWith(RobolectricTestRunner.class)
+@Config(manifest = Config.NONE)
+public class GrexTest {
+    @Test
+    public void putAndGetSingleObject() {
+        GRexPersister persister = new GRexPersister(Robolectric.application, "singleObjectTest");
+
+        TestData inData = new TestData("inData", 7);
+
+        TestData putData = persister.put("inData", inData).toBlocking().single();
+        assertThat(putData).isEqualTo(inData);
+
+        TestData getData = persister.get("inData", TestData.class).toBlocking().single();
+        assertThat(getData).isEqualTo(inData);
+    }
+
+    @Test
+    public void putAndGetList() {
+        GRexPersister persister = new GRexPersister(Robolectric.application, "multiObjectTest");
+
+        List<TestData> inList = new ArrayList<>(5);
+
+        for (int i = 0; i < 5; i++) {
+            TestData data = new TestData("test" + i, + i);
+            inList.add(data);
+        }
+
+        List<TestData> putList = persister.putList("inList", inList, TestData.class).toBlocking().single();
+        assertThat(putList).containsAll(inList);
+
+        List<TestData> getList = persister.getList("inList", TestData.class).toBlocking().single();
+        assertThat(getList).containsAll(inList);
+    }
+
+    @Test
+    public void removeObjectFromList() {
+        GRexPersister persister = new GRexPersister(Robolectric.application, "removeObjectTest");
+
+        TestData data1 = new TestData("test1", 1);
+        TestData data2 = new TestData("test2", 2);
+        List<TestData> inList = new ArrayList<>(2);
+        inList.add(data1);
+        inList.add(data2);
+
+        List<TestData> putList = persister.putList("inList", inList, TestData.class).toBlocking().single();
+        assertThat(putList).containsAll(inList);
+
+        List<TestData> modifiedList = persister.removeFromList("inList", data1, TestData.class).toBlocking().single();
+        assertThat(modifiedList)
+                .contains(data2)
+                .doesNotContain(data1);
+
+        List<TestData> getList = persister.getList("inList", TestData.class).toBlocking().single();
+        assertThat(getList)
+                .contains(data2)
+                .doesNotContain(data1);
+    }
+
+    @Test
+    public void removeIndexFromList() {
+        GRexPersister persister = new GRexPersister(Robolectric.application, "removeIndexTest");
+
+        TestData data1 = new TestData("test1", 1);
+        TestData data2 = new TestData("test2", 2);
+        List<TestData> inList = new ArrayList<>(2);
+        inList.add(data1);
+        inList.add(data2);
+
+        List<TestData> putList = persister.putList("inList", inList, TestData.class).toBlocking().single();
+        assertThat(putList).containsAll(inList);
+
+        List<TestData> modifiedList = persister.removeFromList("inList", 0, TestData.class).toBlocking().single();
+        assertThat(modifiedList)
+                .contains(data2)
+                .doesNotContain(data1);
+
+        List<TestData> getList = persister.getList("inList", TestData.class).toBlocking().single();
+        assertThat(getList)
+                .contains(data2)
+                .doesNotContain(data1);
+    }
+
+    @Test
+    public void clear() {
+        GRexPersister persister = new GRexPersister(Robolectric.application, "clearTest");
+
+        TestData inData = new TestData("test", 1);
+
+        TestData putData = persister.put("inData", inData).toBlocking().single();
+        assertThat(putData).isEqualTo(inData);
+
+        boolean cleared = persister.clear("inData").toBlocking().single();
+        assertThat(cleared).isTrue();
+
+        TestData getData = persister.get("inData", TestData.class).toBlocking().single();
+        assertThat(getData).isNull();
+    }
+
+    public static class TestData {
+        public String string;
+        public int integer;
+
+        public TestData() {}
+
+        public TestData(String string, int integer) {
+            this.string = string;
+            this.integer = integer;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof TestData)) {
+                return false;
+            }
+
+            TestData otherData = (TestData) o;
+
+            if (string != null)
+                return string.equals(otherData.string) && integer == otherData.integer;
+
+            return otherData.string == null && integer == otherData.integer;
+        }
+    }
+}
