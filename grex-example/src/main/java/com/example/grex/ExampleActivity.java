@@ -24,6 +24,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.GsonConverter;
 import com.example.grex.helpers.ArmLengthAdapter;
 import com.example.grex.helpers.DinoView;
 import com.example.grex.helpers.RandomDinoGenerator;
@@ -62,7 +63,7 @@ public class ExampleActivity extends Activity {
 
         setContentView(R.layout.activity_example);
         ButterKnife.inject(this);
-        dinoPersister = new GRexPersister(this, PERSISTENCE_DIR);
+        dinoPersister = new GRexPersister(this, PERSISTENCE_DIR, new GsonConverter());
 
         loadDino();
         loadDinoList();

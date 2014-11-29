@@ -18,6 +18,8 @@ apply plugin: 'com.android.application'
 
 dependencies {
     compile project(':grex')
+    compile project(':converters:gson-converter')
+
     compile 'com.jakewharton:butterknife:5.1.2'
 }
 
