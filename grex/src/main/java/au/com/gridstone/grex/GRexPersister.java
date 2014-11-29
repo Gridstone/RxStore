@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 import au.com.gridstone.grex.converter.Converter;
+import au.com.gridstone.grex.converter.ConverterException;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
@@ -83,7 +84,7 @@ public class GRexPersister {
                         subscriber.onNext(list);
                         subscriber.onCompleted();
                     }
-                } catch (IOException e) {
+                } catch (IOException | ConverterException e) {
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onError(e);
                     }

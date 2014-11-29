@@ -17,3 +17,4 @@
 include ':grex'
 include ':grex-example'
 include ':converters:gson-converter'
+include ':converters:jackson-converter'
