@@ -22,7 +22,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.robolectric:robolectric-gradle-plugin:0.13.0'
+        classpath 'org.robolectric:robolectric-gradle-plugin:0.14.1'
     }
 }
 
