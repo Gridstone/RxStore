@@ -1,4 +1,4 @@
-package com.example;
+package au.com.gridstone.grex.converters;
 
 import com.google.gson.Gson;
 

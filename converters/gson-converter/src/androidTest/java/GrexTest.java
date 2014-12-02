@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import com.example.GsonConverter;
+import au.com.gridstone.grex.converters.GsonConverter;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

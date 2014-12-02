@@ -24,7 +24,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.GsonConverter;
+import au.com.gridstone.grex.converters.GsonConverter;
 import com.example.grex.helpers.ArmLengthAdapter;
 import com.example.grex.helpers.DinoView;
 import com.example.grex.helpers.RandomDinoGenerator;

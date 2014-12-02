@@ -1,4 +1,4 @@
-package com.example;
+package au.com.gridstone.grex.converters;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
