@@ -1,9 +1,7 @@
 package au.com.gridstone.grex.converter;
 
 public class ConverterException extends Exception {
-
-    public ConverterException() {
-    }
+    public ConverterException() {}
 
     public ConverterException(String detailMessage) {
         super(detailMessage);

@@ -28,5 +28,4 @@ public class GsonConverter implements Converter {
     public <T> T read(Reader reader, Type type) {
         return gson.fromJson(reader, type);
     }
-
 }
