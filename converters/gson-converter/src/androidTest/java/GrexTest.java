@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import com.example.GsonConverter;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
@@ -35,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GrexTest {
     @Test
     public void putAndGetSingleObject() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "singleObjectTest");
+        GRexPersister persister = new GRexPersister(Robolectric.application, "singleObjectTest", new GsonConverter());
 
         TestData inData = new TestData("inData", 7);
 
@@ -48,7 +50,7 @@ public class GrexTest {
 
     @Test
     public void putAndGetList() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "multiObjectTest");
+        GRexPersister persister = new GRexPersister(Robolectric.application, "multiObjectTest", new GsonConverter());
 
         List<TestData> inList = new ArrayList<>(5);
 
@@ -66,7 +68,7 @@ public class GrexTest {
 
     @Test
     public void removeObjectFromList() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "removeObjectTest");
+        GRexPersister persister = new GRexPersister(Robolectric.application, "removeObjectTest", new GsonConverter());
 
         TestData data1 = new TestData("test1", 1);
         TestData data2 = new TestData("test2", 2);
@@ -90,7 +92,7 @@ public class GrexTest {
 
     @Test
     public void removeIndexFromList() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "removeIndexTest");
+        GRexPersister persister = new GRexPersister(Robolectric.application, "removeIndexTest", new GsonConverter());
 
         TestData data1 = new TestData("test1", 1);
         TestData data2 = new TestData("test2", 2);
@@ -114,7 +116,7 @@ public class GrexTest {
 
     @Test
     public void clear() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "clearTest");
+        GRexPersister persister = new GRexPersister(Robolectric.application, "clearTest", new GsonConverter());
 
         TestData inData = new TestData("test", 1);
 

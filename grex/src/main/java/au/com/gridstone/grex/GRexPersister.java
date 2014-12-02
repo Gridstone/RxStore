@@ -18,8 +18,6 @@ package au.com.gridstone.grex;
 
 import android.content.Context;
 
-import com.google.gson.Gson;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -32,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import au.com.gridstone.grex.converter.Converter;
+import au.com.gridstone.grex.converter.ConverterException;
 import rx.Observable;
 import rx.Subscriber;
 import rx.functions.Func1;
@@ -45,28 +45,19 @@ import static android.content.Context.MODE_PRIVATE;
  */
 public class GRexPersister {
     private final Context context;
-    private final Gson gson;
+    private final Converter converter;
     private final String dirName;
 
     /**
-     * Create a new instance.
+     * Create a new instances using a provided converter.
      *
-     * @param context Context used to determine file directory.
-     * @param dirName The sub directory name to perform all read/write operations to.
+     * @param context   Context used to determine file directory.
+     * @param dirName   The sub directory name to perform all read/write operations to.
+     * @param converter Converter used to serialize/deserialize objects.
      */
-    public GRexPersister(Context context, String dirName) {
-        this(context, dirName, new Gson());
-    }
-
-    /**
-     * Create a new instances using a provided Gson.
-     * @param context Context used to determine file directory.
-     * @param dirName The sub directory name to perform all read/write operations to.
-     * @param gson Gson used to serialize/deserialize objects.
-     */
-    public GRexPersister(Context context, String dirName, Gson gson) {
+    public GRexPersister(Context context, String dirName, Converter converter) {
         this.context = context.getApplicationContext();
-        this.gson = gson;
+        this.converter = converter;
         this.dirName = dirName;
     }
 
@@ -82,19 +73,18 @@ public class GRexPersister {
         return Observable.create(new Observable.OnSubscribe<List<T>>() {
             @Override
             public void call(Subscriber<? super List<T>> subscriber) {
-                Type listType = new ListOfSomething<>(type);
                 Writer writer = null;
 
                 try {
                     File outFile = getFile(key);
                     writer = new FileWriter(outFile);
-                    gson.toJson(list, listType, writer);
+                    converter.write(list, writer);
 
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onNext(list);
                         subscriber.onCompleted();
                     }
-                } catch (IOException e) {
+                } catch (IOException | ConverterException e) {
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onError(e);
                     }
@@ -141,7 +131,7 @@ public class GRexPersister {
                     }
 
                     reader = new FileReader(inFile);
-                    List<T> result = gson.fromJson(reader, listType);
+                    List<T> result = converter.read(reader, listType);
 
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onNext(result);
@@ -260,7 +250,7 @@ public class GRexPersister {
                 try {
                     File outFile = getFile(key);
                     writer = new FileWriter(outFile);
-                    gson.toJson(object, writer);
+                    converter.write(object, writer);
 
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onNext(object);
@@ -308,7 +298,7 @@ public class GRexPersister {
                     }
 
                     reader = new FileReader(inFile);
-                    T result = gson.fromJson(reader, type);
+                    T result = converter.read(reader, type);
 
                     if (!subscriber.isUnsubscribed()) {
                         subscriber.onNext(result);
