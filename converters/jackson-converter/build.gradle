@@ -1,3 +1,5 @@
+import com.android.builder.core.BuilderConstants
+
 apply plugin: 'com.android.library'
 
 android {
@@ -31,3 +33,15 @@ dependencies {
     compile project(':grex')
     compile 'com.fasterxml.jackson.core:jackson-databind:2.4.4'
 }
+
+android.libraryVariants.all { variant ->
+    def name = variant.buildType.name
+    if (!BuilderConstants.DEBUG.equals(name)) {
+        def task = project.tasks.create "jar${name.capitalize()}", Jar
+        task.dependsOn variant.javaCompile
+        task.from variant.javaCompile.destinationDir
+        artifacts.add('archives', task);
+    }
+}
+
+apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
