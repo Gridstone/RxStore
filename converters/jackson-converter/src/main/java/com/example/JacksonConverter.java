@@ -12,7 +12,6 @@ import au.com.gridstone.grex.converter.Converter;
 import au.com.gridstone.grex.converter.ConverterException;
 
 public class JacksonConverter implements Converter {
-
     private ObjectMapper objectMapper;
 
     public JacksonConverter() {

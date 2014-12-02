@@ -9,7 +9,6 @@ import java.lang.reflect.Type;
 import au.com.gridstone.grex.converter.Converter;
 
 public class GsonConverter implements Converter {
-
     private Gson gson;
 
     public GsonConverter() {
