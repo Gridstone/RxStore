@@ -40,7 +40,7 @@ android {
 
 dependencies {
     compile project(':grex')
-    compile 'com.google.code.gson:gson:2.3'
+    compile 'com.google.code.gson:gson:2.3.1'
 
     androidTestCompile 'org.robolectric:robolectric:2.4'
     androidTestCompile 'junit:junit:4.11'

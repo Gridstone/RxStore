@@ -46,7 +46,7 @@ android {
 }
 
 dependencies {
-    compile 'com.netflix.rxjava:rxjava-android:0.20.4'
+    compile 'io.reactivex:rxandroid:0.23.0'
 }
 
 android.libraryVariants.all { variant ->
