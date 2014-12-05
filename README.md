@@ -1,7 +1,7 @@
 G-Rex
 =====
 
-A tiny library that assists in saving and restoring objects to and from disk using Gson and RxJava on Android.
+A tiny library that assists in saving and restoring objects to and from disk using RxJava on Android.
 
 ![](images/example.png)
 
@@ -16,7 +16,7 @@ There are [many options][1] for persisting data in Android, some easier than oth
 
 G-Rex is here to help. It's not doing anything fancy; it's probably code you've written many times yourself. It just wants to help you with a task that can be tedious, allowing you to get on coding the fun stuff.
 
-G-Rex is most useful to those already using [Gson][4] and [RxJava][5] in their applications. Gson allows for simple serialization/deserialization of objects. RxJava helps alleviate threading concerns and allows for composition with existing method chains.
+G-Rex is most useful to those already using [Gson][4]/[Jackson][8] and [RxJava][5] in their applications. Gson/Jackson allow for simple serialization/deserialization of objects. RxJava helps alleviate threading concerns and allows for composition with existing method chains.
 
 Usage
 -----
@@ -33,7 +33,7 @@ public class Dino {
 You can use a `GRexPersister` as a stand alone helper to store a Dino.
 
 ```java
-GRexPersister persister = new GRexPersister(getContext(), "persistence");
+GRexPersister persister = new GRexPersister(getContext(), "persistence", new GsonConverter());
 
 Dino dino = new Dino("Gregory", 37);
 
@@ -83,15 +83,20 @@ webServices.getDino()
             //Behold the downloaded and persisted dino
         }
     });
-
 ```
+
+Converters
+----------
+
+G-Rex allows you to choose your own serialization format. [`GsonConverter`][9] and [`JacksonConverter`][10] are provided out of the box, but you're free to implement your own [`Converter`][11]. Pull requests for additional formats are also welcome.
 
 Download
 --------
 
 Download [the latest JAR][7] or grab via Gradle:
 ```groovy
-compile 'au.com.gridstone:grex:1.0.0'
+compile 'au.com.gridstone:grex:1.1.0'
+compile 'au.com.gridstone:grex-gson-converter:1.1.0'
 ```
 
 License
@@ -118,3 +123,7 @@ License
  [5]: https://github.com/ReactiveX/RxJava
  [6]: http://square.github.io/retrofit/
  [7]: https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=au.com.gridstone&a=grex&v=LATEST
+ [8]: http://jackson.codehaus.org/
+ [9]: https://github.com/Naturally-Being/G-Rex/blob/master/converters/gson-converter/src/main/java/au/com/gridstone/grex/converters/GsonConverter.java
+ [10]: https://github.com/Naturally-Being/G-Rex/blob/master/converters/jackson-converter/src/main/java/au/com/gridstone/grex/converters/JacksonConverter.java
+ [11]: https://github.com/Naturally-Being/G-Rex/blob/master/grex/src/main/java/au/com/gridstone/grex/converter/Converter.java
