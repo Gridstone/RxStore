@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2014
+ * Copyright 2014 Omricat Software
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-include ':grex'
-include ':grex-example'
-include ':converters:gson-converter'
-include ':converters:jackson-converter'
-include ':grex-core'
+package au.com.gridstone.grex;
+
+import java.io.File;
+
+/**
+ * Interface to provide a {@link File} given a {@code String} key.
+ *
+ * @author Joseph Cooper
+ */
+public interface FileFactory {
+
+    /**
+     * Return a {@link File} from a {@code String} key.
+     * Must not return null.
+     */
+    public File getFile(final String key);
+}
