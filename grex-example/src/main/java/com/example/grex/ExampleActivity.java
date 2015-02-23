@@ -24,7 +24,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import au.com.gridstone.grex.converters.GsonConverter;
 import com.example.grex.helpers.ArmLengthAdapter;
 import com.example.grex.helpers.DinoView;
 import com.example.grex.helpers.RandomDinoGenerator;
@@ -32,6 +31,7 @@ import com.example.grex.helpers.RandomDinoGenerator;
 import java.util.List;
 
 import au.com.gridstone.grex.GRexPersister;
+import au.com.gridstone.grex.converters.GsonConverter;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import butterknife.OnClick;
