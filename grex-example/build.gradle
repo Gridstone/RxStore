@@ -21,12 +21,13 @@ dependencies {
     compile project(':converters:gson-converter')
     compile project(':converters:jackson-converter')
 
+    compile 'io.reactivex:rxandroid:0.24.0'
     compile 'com.jakewharton:butterknife:6.0.0'
 }
 
 android {
     compileSdkVersion 21
-    buildToolsVersion '21.1.1'
+    buildToolsVersion '21.1.2'
 
     defaultConfig {
         applicationId "com.example.grex"
