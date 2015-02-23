@@ -95,8 +95,8 @@ Download
 
 Download [the latest JAR][7] or grab via Gradle:
 ```groovy
-compile 'au.com.gridstone:grex:1.1.0'
-compile 'au.com.gridstone:grex-gson-converter:1.1.0'
+compile 'au.com.gridstone:grex:2.0.0'
+compile 'au.com.gridstone:grex-gson-converter:2.0.0'
 ```
 
 License
