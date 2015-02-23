@@ -108,8 +108,8 @@ public class GRexPersister {
      *
      * @param key  The key that the List is stored against.
      * @param type The type of each item stored in the List.
-     * @return An Observable that returns the read list in its onNext(). If no stored List is found,
-     * an immutable empty List will be returned.
+     * @return An Observable that returns the read list in its onNext(). If no list is found, then
+     * onCompleted() will be called immediately.
      */
     public <T> Observable<List<T>> getList(final String key, final Class<T> type) {
         return Observable.create(new Observable.OnSubscribe<List<T>>() {
@@ -123,7 +123,6 @@ public class GRexPersister {
 
                     if (!inFile.exists()) {
                         if (!subscriber.isUnsubscribed()) {
-                            subscriber.onNext(Collections.<T>emptyList());
                             subscriber.onCompleted();
                         }
 
@@ -164,6 +163,7 @@ public class GRexPersister {
      */
     public <T> Observable<List<T>> addToList(final String key, final T object, final Class<T> type) {
         return getList(key, type)
+                .defaultIfEmpty(Collections.<T>emptyList())
                 .map(new Func1<List<T>, List<T>>() {
                     @Override
                     public List<T> call(List<T> list) {
@@ -290,7 +290,6 @@ public class GRexPersister {
 
                     if (!inFile.exists()) {
                         if (!subscriber.isUnsubscribed()) {
-                            subscriber.onNext(null);
                             subscriber.onCompleted();
                         }
 

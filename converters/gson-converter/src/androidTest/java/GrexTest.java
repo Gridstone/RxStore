@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import au.com.gridstone.grex.converters.GsonConverter;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
@@ -26,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import au.com.gridstone.grex.GRexPersister;
+import au.com.gridstone.grex.converters.GsonConverter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -123,11 +122,22 @@ public class GrexTest {
         TestData putData = persister.put("inData", inData).toBlocking().single();
         assertThat(putData).isEqualTo(inData);
 
-        boolean cleared = persister.clear("inData").toBlocking().single();
-        assertThat(cleared).isTrue();
+        boolean clearOperationSuccess = persister.clear("inData").toBlocking().single();
+        assertThat(clearOperationSuccess).isTrue();
 
-        TestData getData = persister.get("inData", TestData.class).toBlocking().single();
-        assertThat(getData).isNull();
+        boolean isEmpty = persister.get("inData", TestData.class).isEmpty().toBlocking().single();
+        assertThat(isEmpty).isTrue();
+    }
+
+    @Test
+    public void unknownKeyReturnsEmpty() {
+        GRexPersister persister = new GRexPersister(Robolectric.application, "unknownKeyTest", new GsonConverter());
+
+        boolean unknownObjectKeyEmpty = persister.get("unknownObj", TestData.class).isEmpty().toBlocking().single();
+        assertThat(unknownObjectKeyEmpty).isTrue();
+
+        boolean unknownListKeyEmpty = persister.getList("unknownList", TestData.class).isEmpty().toBlocking().single();
+        assertThat(unknownListKeyEmpty).isTrue();
     }
 
     public static class TestData {
