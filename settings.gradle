@@ -15,7 +15,6 @@
  */
 
 include ':grex'
-include ':grex-example'
+include ':grex-example', 'grex-android'
 include ':converters:gson-converter'
 include ':converters:jackson-converter'
-include ':grex-core'

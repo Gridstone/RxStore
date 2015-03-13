@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-    compile project(':grex-core')
+    compile project(':grex')
     compile 'com.fasterxml.jackson.core:jackson-databind:2.4.4'
 }
 

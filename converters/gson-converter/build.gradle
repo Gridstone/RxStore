@@ -42,7 +42,7 @@ android {
 
 dependencies {
     compile project(':grex')
-    compile project(':grex-core')
+    compile project(':grex-android')
     compile 'com.google.code.gson:gson:2.3.1'
     androidTestCompile 'org.robolectric:robolectric:2.4'
     androidTestCompile "$rootProject.ext.junit"

@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-apply plugin: 'com.android.application'
+import com.android.builder.core.BuilderConstants;
 
-dependencies {
-    compile project(':grex-android')
-    compile project(':converters:gson-converter')
-    compile project(':converters:jackson-converter')
+apply plugin: 'com.android.library'
 
-    compile "$rootProject.ext.rxAndroid"
-    compile 'com.jakewharton:butterknife:6.0.0'
-}
 
 android {
     compileSdkVersion 21
     buildToolsVersion '21.1.2'
 
     defaultConfig {
-        applicationId "com.example.grex"
-        minSdkVersion 15
-        targetSdkVersion 21
-        versionCode 1
-        versionName '1.1.0'
+        versionName VERSION_NAME
+        minSdkVersion 8
     }
 
     compileOptions {
@@ -43,7 +34,6 @@ android {
     }
 
     packagingOptions {
-        exclude 'LICENSE.txt'
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/NOTICE.txt'
@@ -54,3 +44,21 @@ android {
         exclude 'META-INF/services/com.fasterxml.jackson.core.JsonFactory'
     }
 }
+
+dependencies {
+    compile project(':grex')
+    compile "$rootProject.ext.rxAndroid"
+    compile "$rootProject.ext.rxJava"
+}
+
+android.libraryVariants.all { variant ->
+    def name = variant.buildType.name
+    if (!BuilderConstants.DEBUG.equals(name)) {
+        def task = project.tasks.create "jar${name.capitalize()}", Jar
+        task.dependsOn variant.javaCompile
+        task.from variant.javaCompile.destinationDir
+        artifacts.add('archives', task);
+    }
+}
+
+apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
