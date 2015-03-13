@@ -55,7 +55,8 @@ public class FileIODelegate implements IODelegate {
         return new FileWriter(getFile(key));
     }
 
-    @Override public boolean clear(final String key) {
+    @Override
+    public boolean clear(final String key) {
         return getFile(key).delete();
     }
 

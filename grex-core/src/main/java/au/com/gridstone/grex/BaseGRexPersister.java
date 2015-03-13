@@ -1,4 +1,4 @@
-package au.com.gridstone.grex;/*
+/*
  * Copyright (C) GRIDSTONE 2014
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +13,7 @@ package au.com.gridstone.grex;/*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package au.com.gridstone.grex;
 
 
 import java.io.IOException;
