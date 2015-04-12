@@ -11,7 +11,7 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'robolectric'
+//apply plugin: 'robolectric'
 
 android {
     compileSdkVersion 22
@@ -44,9 +44,9 @@ dependencies {
     compile project(':grex')
     compile 'com.google.code.gson:gson:2.3.1'
 
-    androidTestCompile 'org.robolectric:robolectric:2.4'
-    androidTestCompile 'junit:junit:4.11'
-    androidTestCompile 'org.assertj:assertj-core:1.7.0'
+    testCompile 'org.robolectric:robolectric:2.4'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:1.7.0'
 }
 
 android.libraryVariants.all { variant ->
