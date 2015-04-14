@@ -29,7 +29,7 @@ import static android.content.Context.MODE_PRIVATE;
  * @author Christopher Horner
  * @author Joseph Cooper
  */
-public class GRexPersister extends BaseGRexPersister {
+public class GRexAndroidPersister extends BaseGRexPersister {
 
     /**
      * Create a new instances using a provided au.com.gridstone.grex.converter.
@@ -39,8 +39,8 @@ public class GRexPersister extends BaseGRexPersister {
      *                  operations to.
      * @param converter Converter used to serialize/deserialize objects.
      */
-    public GRexPersister(final Context context, final String dirName,
-                         final Converter converter) {
+    public GRexAndroidPersister(final Context context, final String dirName,
+                                final Converter converter) {
         super(converter,
                 new FileIODelegate(context
                 .getApplicationContext().getDir(dirName, MODE_PRIVATE)

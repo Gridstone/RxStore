@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package au.com.gridstone.grex.core;
+package au.com.gridstone.grex;
 
 import java.io.File;
 
-import au.com.gridstone.grex.BaseGRexPersister;
-import au.com.gridstone.grex.FileIODelegate;
 import au.com.gridstone.grex.converter.Converter;
 
 
-public class GRexCorePersister extends BaseGRexPersister {
+public class GRexPersister extends BaseGRexPersister {
 
     /**
      * Create a new instance using a provided {@link Converter}.
@@ -32,8 +30,8 @@ public class GRexCorePersister extends BaseGRexPersister {
      * @param directory Directory to write/read files, not null. {@link
      *                  File#isDirectory()} must return true on this parameter
      */
-    public GRexCorePersister(final Converter converter,
-                             final File directory) {
+    public GRexPersister(final Converter converter,
+                         final File directory) {
         super(converter, new FileIODelegate(directory) {
         });
     }

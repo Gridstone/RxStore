@@ -30,7 +30,7 @@ import com.example.grex.helpers.RandomDinoGenerator;
 
 import java.util.List;
 
-import au.com.gridstone.grex.GRexPersister;
+import au.com.gridstone.grex.GRexAndroidPersister;
 import au.com.gridstone.grex.converters.GsonConverter;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -55,7 +55,7 @@ public class ExampleActivity extends Activity {
     @InjectView(R.id.dino_list_container)
     ViewGroup dinoListContainer;
 
-    private GRexPersister dinoPersister;
+    private GRexAndroidPersister dinoPersister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +63,7 @@ public class ExampleActivity extends Activity {
 
         setContentView(R.layout.activity_example);
         ButterKnife.inject(this);
-        dinoPersister = new GRexPersister(this, PERSISTENCE_DIR, new GsonConverter());
+        dinoPersister = new GRexAndroidPersister(this, PERSISTENCE_DIR, new GsonConverter());
 
         loadDino();
         loadDinoList();
