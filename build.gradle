@@ -33,3 +33,14 @@ allprojects {
 
     apply plugin: 'maven'
 }
+
+ext {
+
+    rxJava = 'io.reactivex:rxjava:1.0.7'
+    rxAndroid = 'io.reactivex:rxandroid:0.24.0'
+
+    junit = 'junit:junit:4.11'
+    assertj = 'org.assertj:assertj-core:1.7.0'
+    mockito = 'org.mockito:mockito-core:1.10.14'
+
+}

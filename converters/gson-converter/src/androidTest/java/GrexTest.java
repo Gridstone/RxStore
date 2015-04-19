@@ -23,7 +23,7 @@ import org.robolectric.annotation.Config;
 import java.util.ArrayList;
 import java.util.List;
 
-import au.com.gridstone.grex.GRexPersister;
+import au.com.gridstone.grex.GRexAndroidPersister;
 import au.com.gridstone.grex.converters.GsonConverter;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GrexTest {
     @Test
     public void putAndGetSingleObject() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "singleObjectTest", new GsonConverter());
+        GRexAndroidPersister persister = new GRexAndroidPersister(Robolectric.application, "singleObjectTest", new GsonConverter());
 
         TestData inData = new TestData("inData", 7);
 
@@ -49,7 +49,7 @@ public class GrexTest {
 
     @Test
     public void putAndGetList() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "multiObjectTest", new GsonConverter());
+        GRexAndroidPersister persister = new GRexAndroidPersister(Robolectric.application, "multiObjectTest", new GsonConverter());
 
         List<TestData> inList = new ArrayList<>(5);
 
@@ -67,7 +67,7 @@ public class GrexTest {
 
     @Test
     public void removeObjectFromList() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "removeObjectTest", new GsonConverter());
+        GRexAndroidPersister persister = new GRexAndroidPersister(Robolectric.application, "removeObjectTest", new GsonConverter());
 
         TestData data1 = new TestData("test1", 1);
         TestData data2 = new TestData("test2", 2);
@@ -91,7 +91,7 @@ public class GrexTest {
 
     @Test
     public void removeIndexFromList() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "removeIndexTest", new GsonConverter());
+        GRexAndroidPersister persister = new GRexAndroidPersister(Robolectric.application, "removeIndexTest", new GsonConverter());
 
         TestData data1 = new TestData("test1", 1);
         TestData data2 = new TestData("test2", 2);
@@ -115,7 +115,7 @@ public class GrexTest {
 
     @Test
     public void clear() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "clearTest", new GsonConverter());
+        GRexAndroidPersister persister = new GRexAndroidPersister(Robolectric.application, "clearTest", new GsonConverter());
 
         TestData inData = new TestData("test", 1);
 
@@ -131,7 +131,7 @@ public class GrexTest {
 
     @Test
     public void unknownKeyReturnsEmpty() {
-        GRexPersister persister = new GRexPersister(Robolectric.application, "unknownKeyTest", new GsonConverter());
+        GRexAndroidPersister persister = new GRexAndroidPersister(Robolectric.application, "unknownKeyTest", new GsonConverter());
 
         boolean unknownObjectKeyEmpty = persister.get("unknownObj", TestData.class).isEmpty().toBlocking().single();
         assertThat(unknownObjectKeyEmpty).isTrue();
