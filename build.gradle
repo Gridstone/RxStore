@@ -36,7 +36,7 @@ allprojects {
 
 ext {
 
-    rxJava = 'io.reactivex:rxjava:1.0.7'
+    rxJava = 'io.reactivex:rxjava:1.0.10'
     rxAndroid = 'io.reactivex:rxandroid:0.24.0'
 
     junit = 'junit:junit:4.11'
