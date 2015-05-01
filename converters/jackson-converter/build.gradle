@@ -3,8 +3,8 @@ import com.android.builder.core.BuilderConstants
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion '21.1.2'
+    compileSdkVersion 22
+    buildToolsVersion '22.0.1'
 
     defaultConfig {
         versionName VERSION_NAME
