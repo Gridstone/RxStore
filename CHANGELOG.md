@@ -1,5 +1,9 @@
 Change Log
 ==========
+Version 3.0.0 *(2015-05-01)*
+----------------------------
+* G-Rex is no longer tied to Android, allowing you to unleash dino persistence on desktop Java
+* API break: `grex-android` artifact has been introduced. `grex` artifact is now used for plain Java
 
 Version 2.0.0 *(2015-02-23)*
 ----------------------------
