@@ -1,17 +1,6 @@
 import com.android.builder.core.BuilderConstants
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'org.robolectric:robolectric-gradle-plugin:0.14.1'
-    }
-}
-
 apply plugin: 'com.android.library'
-apply plugin: 'robolectric'
 
 android {
     compileSdkVersion 22
@@ -42,11 +31,8 @@ android {
 
 dependencies {
     compile project(':grex')
-    compile project(':grex-android')
     compile 'com.google.code.gson:gson:2.3.1'
-    androidTestCompile 'org.robolectric:robolectric:2.4'
-    androidTestCompile "$rootProject.ext.junit"
-    androidTestCompile "$rootProject.ext.assertj"
+
 }
 
 android.libraryVariants.all { variant ->
