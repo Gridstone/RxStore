@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-buildscript {
-  repositories {
-    jcenter()
+package com.example.rxstore.helpers;
+
+import com.example.rxstore.Dino;
+
+import java.util.Random;
+
+public class RandomDinoGenerator {
+  private static final String[] NAMES = {
+      "Twinkles", "Fluffy", "Tubs", "Bitey", "Rosie", "Dave", "Gregory", "Tabitha"
+  };
+
+  private static Random random = new Random();
+
+  private RandomDinoGenerator() {
+    throw new AssertionError("No instances.");
   }
-}
 
-allprojects {
-  repositories {
-    jcenter()
+  public static Dino spawn() {
+    String name = NAMES[random.nextInt(NAMES.length)];
+    int armLength = random.nextInt(100);
+
+    return new Dino(name, armLength);
   }
-
-  group = GROUP
-  version = VERSION_NAME
-}
-
-ext {
-  androidPlugin = 'com.android.tools.build:gradle:1.3.0'
-  rxJava = 'io.reactivex:rxjava:1.0.14'
-  rxAndroid = 'io.reactivex:rxandroid:1.0.1'
-  junit = 'junit:junit:4.12'
-  assertj = 'org.assertj:assertj-core:1.7.0'
-  mockito = 'org.mockito:mockito-core:1.10.14'
-  butterknife = 'com.jakewharton:butterknife:7.0.1'
 }
