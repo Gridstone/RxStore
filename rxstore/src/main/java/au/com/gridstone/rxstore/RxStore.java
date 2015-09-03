@@ -83,6 +83,7 @@ public class RxStore {
     private final File directory;
 
     private Builder(File directory) {
+      assertNotNull(directory, "directory");
       this.directory = directory;
     }
 
@@ -93,6 +94,7 @@ public class RxStore {
      * This will also finish initializing this RxStore instance.
      */
     public RxStore using(Converter converter) {
+      assertNotNull(converter, "converter");
       return new RxStore(directory, converter);
     }
   }
@@ -106,6 +108,7 @@ public class RxStore {
     private String directoryName = "";
 
     private AndroidBuilder(Context context) {
+      assertNotNull(context, "context");
       this.context = context.getApplicationContext();
     }
 
@@ -114,6 +117,7 @@ public class RxStore {
      * restore objects.
      */
     public AndroidBuilder in(String directory) {
+      assertNotNull(directory, "directory");
       this.directoryName = directory;
       return this;
     }
@@ -125,6 +129,7 @@ public class RxStore {
      * This will also finish initializing this RxStore instance.
      */
     public RxStore using(Converter converter) {
+      assertNotNull(converter, "converter");
       File directory = context.getDir(directoryName, Context.MODE_PRIVATE);
       return new RxStore(directory, converter);
     }
@@ -365,6 +370,12 @@ public class RxStore {
         }
       }
     });
+  }
+
+  private static void assertNotNull(Object object, String name) {
+    if (object == null) {
+      throw new NullPointerException(name + " must not be null.");
+    }
   }
 
   static final class ListOfSomething implements ParameterizedType {

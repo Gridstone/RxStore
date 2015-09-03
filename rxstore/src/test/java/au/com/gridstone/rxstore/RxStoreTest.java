@@ -33,6 +33,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -243,6 +244,25 @@ public class RxStoreTest {
         rxStore.removeFromList("unknownList", 0, TestData.class).isEmpty().toBlocking().single();
 
     assertThat(empty).isTrue();
+  }
+
+  @Test public void nullDirectoryFails() {
+    try {
+      RxStore.with((File) null);
+      failBecauseExceptionWasNotThrown(NullPointerException.class);
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessageContaining("null");
+    }
+  }
+
+  @Test public void nullConverterFails() {
+    try {
+      File testDir = new File(tempDir.getRoot(), TEST_DIR_NAME);
+      RxStore.with(testDir).using(null);
+      failBecauseExceptionWasNotThrown(NullPointerException.class);
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessageContaining("null");
+    }
   }
 
   private static List<TestData> createTestList() {
