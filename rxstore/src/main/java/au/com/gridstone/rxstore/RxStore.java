@@ -33,7 +33,7 @@ import rx.Subscriber;
 import rx.functions.Func1;
 
 /**
- * Facilitates the read and write objects to and from disk using RxJava.
+ * Facilitates the read and write of objects to and from disk using RxJava.
  * <p/>
  * Initialise with...
  * <pre>
@@ -340,8 +340,8 @@ public class RxStore {
    * </p>
    * This Observable will be empty if the existing list is not found.
    */
-  public final <T> Observable<List<T>> removeFromList(final String key,
-      final int position, final Class<T> type) {
+  public final <T> Observable<List<T>> removeFromList(final String key, final int position,
+      final Class<T> type) {
     return getList(key, type).map(new Func1<List<T>, List<T>>() {
       @Override public List<T> call(List<T> list) {
         list = new ArrayList<>(list);
