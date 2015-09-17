@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2015
+ * Copyright (C) GRIDSTONE 2014
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,14 @@
  * limitations under the License.
  */
 
-buildscript {
-  repositories {
-    jcenter()
+package com.example.rxstore;
+
+public class Dino {
+  public final String name;
+  public final int armLength;
+
+  public Dino(String name, int armLength) {
+    this.name = name;
+    this.armLength = armLength;
   }
-}
-
-allprojects {
-  repositories {
-    jcenter()
-  }
-
-  group = GROUP
-  version = VERSION_NAME
-}
-
-ext {
-  androidPlugin = 'com.android.tools.build:gradle:1.3.0'
-  rxJava = 'io.reactivex:rxjava:1.0.14'
-  rxAndroid = 'io.reactivex:rxandroid:1.0.1'
-  junit = 'junit:junit:4.12'
-  assertj = 'org.assertj:assertj-core:1.7.0'
-  mockito = 'org.mockito:mockito-core:1.10.14'
-  butterknife = 'com.jakewharton:butterknife:7.0.1'
 }
