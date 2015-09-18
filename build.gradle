@@ -27,6 +27,13 @@ allprojects {
 
   group = GROUP
   version = VERSION_NAME
+
+  if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+      // disable the crazy super-strict doclint tool in Java 8
+      options.addStringOption('Xdoclint:none', '-quiet')
+    }
+  }
 }
 
 ext {

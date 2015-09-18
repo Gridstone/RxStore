@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
 
 /**
  * Convert objects to and from a format that allows them to be saved to disk.
- * <p/>
+ * <p>
  * Use a converter when initializing an {@link RxStore}
  * <pre>
  * {@code

@@ -34,7 +34,7 @@ import rx.functions.Func1;
 
 /**
  * Facilitates the read and write of objects to and from disk using RxJava.
- * <p/>
+ * <p>
  * Initialise with...
  * <pre>
  * {@code
@@ -60,7 +60,7 @@ public class RxStore {
   /**
    * Start creating an {@link RxStore} that will utilise an Android application's
    * private directory.
-   * <p/>
+   * <p>
    * To specify a subdirectory in your application's private directory, call
    * {@link AndroidBuilder#in(String)} before {@link AndroidBuilder#using(Converter)}.
    */
@@ -90,7 +90,7 @@ public class RxStore {
     /**
      * Specify the {@link Converter} that this {@link RxStore} will use to serialise
      * and deserialize objects.
-     * <p/>
+     * <p>
      * This will also finish initializing this RxStore instance.
      */
     public RxStore using(Converter converter) {
@@ -125,7 +125,7 @@ public class RxStore {
     /**
      * Specify the {@link Converter} that this {@link RxStore} will use to serialise
      * and deserialize objects.
-     * <p/>
+     * <p>
      * This will also finish initializing this RxStore instance.
      */
     public RxStore using(Converter converter) {
@@ -316,7 +316,7 @@ public class RxStore {
   /**
    * Removes an object from an existing List. Returns an Observable of the list
    * written to disk after the remove operation has occurred.
-   * </p>
+   * <p>
    * This Observable will be empty if the existing list is not found.
    */
   public final <T> Observable<List<T>> removeFromList(final String key, final T object,
@@ -337,7 +337,7 @@ public class RxStore {
   /**
    * Remove an object from an existing List by its index. Returns an Observable
    * of the list written to disk after the remove operation has occurred.
-   * </p>
+   * <p>
    * This Observable will be empty if the existing list is not found.
    */
   public final <T> Observable<List<T>> removeFromList(final String key, final int position,

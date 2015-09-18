@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 
+plugins {
+  id 'com.jfrog.bintray' version '1.3.1'
+}
+
 apply plugin: 'java'
-//apply plygin: 'maven'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.7
-version = VERSION_NAME
 
 repositories {
   jcenter()
@@ -29,4 +32,45 @@ dependencies {
   compile 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
 }
 
-//apply from: 'https://raw.github.com/chrisbanes/gradle-mvn-push/master/gradle-mvn-push.gradle'
+task javadocJar(type: Jar) {
+  classifier = 'javadoc'
+  from javadoc
+}
+
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+artifacts {
+  archives javadocJar, sourcesJar
+}
+
+publishing {
+  publications {
+    JacksonConverter(MavenPublication) {
+      from components.java
+      groupId GROUP
+      artifactId 'rxstore-jackson-converter'
+      version VERSION_NAME
+      artifact sourcesJar
+      artifact javadocJar
+    }
+  }
+}
+
+bintray {
+  user = System.getenv('BINTRAY_USER')
+  key = System.getenv('BINTRAY_KEY')
+  publications = ['JacksonConverter']
+  pkg {
+    repo = 'RxStore'
+    name = 'rxstore-jackson-converter'
+    userOrg = ORGANISATION
+    licenses = [LICENSE]
+    desc = DESCRIPTION
+    websiteUrl = PROJECT_URL
+    issueTrackerUrl = ISSUE_TRACKER_URL
+    vcsUrl = PROJECT_URL
+  }
+}
