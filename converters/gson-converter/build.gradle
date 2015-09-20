@@ -29,7 +29,7 @@ repositories {
 
 dependencies {
   compile project(':rxstore')
-  compile 'com.google.code.gson:gson:2.3.1'
+  compile rootProject.ext.gson
 }
 
 task javadocJar(type: Jar) {

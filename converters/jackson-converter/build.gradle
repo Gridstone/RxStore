@@ -29,7 +29,7 @@ repositories {
 
 dependencies {
   compile project(':rxstore')
-  compile 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
+  compile rootProject.ext.jackson
 }
 
 task javadocJar(type: Jar) {
