@@ -64,8 +64,8 @@ bintray {
   key = System.getenv('BINTRAY_KEY')
   publications = ['JacksonConverter']
   pkg {
-    repo = 'RxStore'
-    name = 'rxstore-jackson-converter'
+    repo = BINTRAY_REPO
+    name = BINTRAY_NAME
     userOrg = ORGANISATION
     licenses = [LICENSE]
     desc = DESCRIPTION

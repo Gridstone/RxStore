@@ -76,8 +76,8 @@ bintray {
   key = System.getenv('BINTRAY_KEY')
   publications = ['RxStore']
   pkg {
-    repo = 'RxStore'
-    name = 'rxstore'
+    repo = BINTRAY_REPO
+    name = BINTRAY_NAME
     userOrg = ORGANISATION
     licenses = [LICENSE]
     desc = DESCRIPTION
