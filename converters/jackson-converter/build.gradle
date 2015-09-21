@@ -51,7 +51,7 @@ publishing {
     JacksonConverter(MavenPublication) {
       from components.java
       groupId GROUP
-      artifactId 'rxstore-jackson-converter'
+      artifactId 'converter-jackson'
       version VERSION_NAME
       artifact sourcesJar
       artifact javadocJar
