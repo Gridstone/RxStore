@@ -54,7 +54,7 @@ public class ExampleActivity extends Activity {
 
     setContentView(R.layout.activity_example);
     ButterKnife.bind(this);
-    rxStore = RxStore.with(this).using(new GsonConverter());
+    rxStore = RxStore.withContext(this).using(new GsonConverter());
 
     loadDino();
     loadDinoList();

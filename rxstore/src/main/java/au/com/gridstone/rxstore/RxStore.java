@@ -64,7 +64,7 @@ public class RxStore {
    * To specify a subdirectory in your application's private directory, call
    * {@link AndroidBuilder#in(String)} before {@link AndroidBuilder#using(Converter)}.
    */
-  public static AndroidBuilder with(Context context) {
+  public static AndroidBuilder withContext(Context context) {
     return new AndroidBuilder(context);
   }
 
