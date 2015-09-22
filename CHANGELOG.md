@@ -1,5 +1,10 @@
 Change Log
 ==========
+Version 4.0.0 *(2015-22-09)*
+* Project renamed to G-Rex to RxStore
+* No more separate artifact for Android (it's now an optional dependency of RxStore)
+* Builders instead of public constructors for `RxStore` (previously known as `GRexPersister`)
+
 Version 3.0.0 *(2015-05-01)*
 ----------------------------
 * G-Rex is no longer tied to Android, allowing you to unleash dino persistence on desktop Java
