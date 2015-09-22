@@ -55,6 +55,33 @@ publishing {
       version VERSION_NAME
       artifact sourcesJar
       artifact javadocJar
+
+      pom.withXml {
+        asNode().children().last() + {
+          resolveStrategy = Closure.DELEGATE_FIRST
+          name 'RxStore Jackson Converter'
+          description DESCRIPTION
+          url PROJECT_URL
+          developers {
+            developer {
+              id POM_DEVELOPER_ID
+              name POM_DEVELOPER_NAME
+            }
+          }
+          licenses {
+            license {
+              name POM_LICENCE_NAME
+              url POM_LICENCE_URL
+              distribution POM_LICENCE_DIST
+            }
+          }
+          scm {
+            url PROJECT_URL
+            connection POM_SCM_CONNECTION
+            developerConnection POM_SCM_DEV_CONNECTION
+          }
+        }
+      }
     }
   }
 }
