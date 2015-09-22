@@ -18,7 +18,7 @@ We have found this particularly useful on Android, where there are [many options
 
 By design, RxStore lets you use whatever serialization format you prefer, so long as you provide a valid [`Converter`][5]. Converters for [Gson][6] and [Jackson][7] are provided out of the box, and pull requests for more are always welcome!
 
-The other advantaged of RxStore is that RxJava helps alleviate some threading concerns when reading and writing to disk, and allows for some pretty nifty method chaining once the operation completes.
+The other advantage of RxStore is that RxJava helps alleviate some threading concerns when reading and writing to disk, and allows for some pretty nifty method chaining once the operation completes.
 
 Usage
 -----
@@ -30,7 +30,9 @@ RxStore myStore = RxStore.with(someDirectory).using(new GsonConverter());
 
 The second is just for Android that makes the process a little smoother.
 ```java
-RxStore myStore = RxStore.withContext(context).in("someDir").using(new GsonConverter());
+RxStore myStore = RxStore.withContext(context)
+    .in("someDir")
+    .using(new GsonConverter());
 ```
 
 The special Android method will use your app's private directory. Calling `in()` allows you to specify a subdirectory.
