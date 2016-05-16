@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
+buildscript {
+  dependencies {
+    classpath rootProject.ext.kotlinPlugin
+  }
+}
+
 plugins {
   id 'com.jfrog.bintray' version '1.3.1'
 }
 
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'maven-publish'
 
-sourceCompatibility = 1.7
-
-repositories {
-  jcenter()
-}
-
 dependencies {
+  compile rootProject.ext.kotlinStdlib
   compile project(':rxstore')
-  compile rootProject.ext.jackson
-
-  testCompile rootProject.ext.junit
-  testCompile rootProject.ext.truth
 }
 
 task javadocJar(type: Jar) {
@@ -51,10 +49,10 @@ artifacts {
 
 publishing {
   publications {
-    JacksonConverter(MavenPublication) {
+    MoshiConverter(MavenPublication) {
       from components.java
       groupId GROUP
-      artifactId 'converter-jackson'
+      artifactId 'rxstore-kotlin'
       version VERSION_NAME
       artifact sourcesJar
       artifact javadocJar
@@ -62,7 +60,7 @@ publishing {
       pom.withXml {
         asNode().children().last() + {
           resolveStrategy = Closure.DELEGATE_FIRST
-          name 'RxStore Jackson Converter'
+          name 'RxStore Kotlin Extensions'
           description DESCRIPTION
           url PROJECT_URL
           developers {
@@ -92,7 +90,7 @@ publishing {
 bintray {
   user = System.getenv('BINTRAY_USER')
   key = System.getenv('BINTRAY_KEY')
-  publications = ['JacksonConverter']
+  publications = ['RxStoreKotlin']
   pkg {
     repo = BINTRAY_REPO
     name = BINTRAY_NAME

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2015
+ * Copyright (C) GRIDSTONE 2016
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,13 @@ repositories {
 dependencies {
   compile project(':rxstore')
   compile rootProject.ext.gson
+
+  testCompile rootProject.ext.junit
+  testCompile rootProject.ext.truth
+}
+
+test {
+  testLogging.showStandardStreams = true
 }
 
 task javadocJar(type: Jar) {

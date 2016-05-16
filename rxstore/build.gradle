@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2015
+ * Copyright (C) GRIDSTONE 2016
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,10 @@ sourceCompatibility = 1.7
 
 dependencies {
   compile rootProject.ext.rxJava
+  compile rootProject.ext.jetbrainsAnnotations
 
   testCompile rootProject.ext.junit
-  testCompile rootProject.ext.assertj
-  testCompile rootProject.ext.mockito
+  testCompile rootProject.ext.truth
 
   compile group: 'com.google.android', name: 'android', version: '4.1.1.4', optional
 }

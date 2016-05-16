@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-include ':rxstore'
-include ':rxstore-kotlin'
-include ':converters:gson-converter'
-include ':converters:jackson-converter'
-include ':converters:moshi-converter'
+package au.com.gridstone.rxstore
+
+import au.com.gridstone.rxstore.StoreProvider.ListStore
+import au.com.gridstone.rxstore.StoreProvider.ValueStore
+
+inline fun <reified T : Any> StoreProvider.valueStore(key: String): ValueStore<T> {
+  return valueStore(key, T::class.java)
+}
+
+inline fun <reified T : Any> StoreProvider.listStore(key: String): ListStore<T> {
+  return listStore(key, T::class.java)
+}

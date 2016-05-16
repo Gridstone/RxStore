@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2015
+ * Copyright (C) GRIDSTONE 2016
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,15 +37,15 @@ allprojects {
 }
 
 ext {
-  androidPlugin = 'com.android.tools.build:gradle:1.3.0'
-  rxJava = 'io.reactivex:rxjava:1.0.14'
-  rxAndroid = 'io.reactivex:rxandroid:1.0.1'
+  rxJava = 'io.reactivex:rxjava:1.1.5'
   junit = 'junit:junit:4.12'
-  assertj = 'org.assertj:assertj-core:1.7.0'
-  mockito = 'org.mockito:mockito-core:1.10.14'
-  butterknife = 'com.jakewharton:butterknife:7.0.1'
-  gson = 'com.google.code.gson:gson:2.3.1'
-  jackson = 'com.fasterxml.jackson.core:jackson-databind:2.6.1'
+  truth = 'com.google.truth:truth:0.28'
+  gson = 'com.google.code.gson:gson:2.6.2'
+  jackson = 'com.fasterxml.jackson.core:jackson-databind:2.7.4'
+  moshi = 'com.squareup.moshi:moshi:1.1.0'
+  jetbrainsAnnotations = 'org.jetbrains:annotations:15.0'
   gradleExtraConfig = 'com.netflix.nebula:gradle-extra-configurations-plugin:2.2.2'
   bintrayVersion = '1.3.1'
+  kotlinPlugin = 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.0.2'
+  kotlinStdlib = 'org.jetbrains.kotlin:kotlin-stdlib:1.0.2'
 }
