@@ -1,6 +1,13 @@
 Change Log
 ==========
-Version 4.0.0 *(2015-22-09)*
+Version 5.0.0 *(2016-05-17)*
+* Replace `RxStore` with `StoreProvider`
+* Stores have convenience fire-and-forget methods
+* Stores can be observed
+* Converters now more flexible
+* Add `MoshiConverter`
+
+Version 4.0.0 *(2015-09-22)*
 * Project renamed to G-Rex to RxStore
 * No more separate artifact for Android (it's now an optional dependency of RxStore)
 * Builders instead of public constructors for `RxStore` (previously known as `GRexPersister`)
