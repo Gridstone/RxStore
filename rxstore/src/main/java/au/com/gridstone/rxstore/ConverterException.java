@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2015
+ * Copyright (C) GRIDSTONE 2016
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,14 @@
 
 package au.com.gridstone.rxstore;
 
-import java.io.Reader;
-import java.io.Writer;
+import java.io.File;
 import java.lang.reflect.Type;
 
 /**
  * Represents something going horribly wrong when a {@link Converter} tries to
- * {@link Converter#read(Reader, Type)} or {@link Converter#write(Object, Writer)}.
+ * {@link Converter#read(File, Type)} or {@link Converter#write(Object, File)}.
  */
-public class ConverterException extends Exception {
+public class ConverterException extends RuntimeException {
   public ConverterException() {
   }
 

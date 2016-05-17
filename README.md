@@ -1,101 +1,97 @@
 RxStore
 =====
 
-A tiny library that assists in saving and restoring objects to and from disk using [RxJava][1].
+A tiny library that assists in saving and restoring objects to and from disk using [RxJava](https://github.com/ReactiveX/RxJava), and observing changes over time.
 
 Details
 -------
 
 RxStore is a simple persistence framework for those already making use of RxJava in their projects. There are many occasions where you don't need the complexity introduced by a database; you just require a simple put/get API.
 
-RxStore is nothing fancy. It's probably code you written many times yourself. Its only goal is to make simple persistence code even simpler.
+We have found this particularly useful on Android, where there are [many options](http://developer.android.com/guide/topics/data/data-storage.html), but none of them quite right...
 
-We have found this particularly useful on Android, where there are [many options][2], but none of them quite right...
-
-* Simple key/value pair? [SharedPreferences][3] makes that simple.
-* Elaborate and enormous data sets? [SQLite][4] can help you, if that's your kind of thing...
+* Simple key/value pair? [SharedPreferences](http://developer.android.com/reference/android/content/SharedPreferences.html) makes that simple.
+* Elaborate interconnected data sets? [SQLite](http://developer.android.com/reference/android/database/sqlite/SQLiteOpenHelper.html) can help you.
 * Everything else? We just want to put and get objects from disk with minimal overhead.
 
-By design, RxStore lets you use whatever serialization format you prefer, so long as you provide a valid [`Converter`][5]. Converters for [Gson][6] and [Jackson][7] are provided out of the box, and pull requests for more are always welcome!
+By design, RxStore lets you use whatever serialization format you prefer, so long as you provide a valid [`Converter`](https://github.com/Gridstone/RxStore/blob/master/rxstore/src/main/java/au/com/gridstone/rxstore/Converter.java). Converters for [Moshi](https://github.com/square/moshi), [Gson](https://code.google.com/p/google-gson/) and [Jackson](https://github.com/ReactiveX/RxAndroid) are provided out of the box, and pull requests for more are always welcome!
 
-The other advantage of RxStore is that RxJava helps alleviate some threading concerns when reading and writing to disk, and allows for some pretty nifty method chaining once the operation completes.
+Leaning on RxJava, RxStore can help alleviate some threading concerns when reading and writing to disk, and allows for some pretty nifty method chaining once the operation completes. It also lets you observe changes as you write new values into stores.
 
 Usage
 -----
 
-There are two ways to initialise an RxStore. The first involves taking in a `File` that specifies the directory to write files into.
+####Setting up stores
+
+In RxStore, there are two kinds of stores: `ValueStores` and `ListStores`. A `ValueStore` lets you write, read, and observe changes to a single value you want to persist. A `ListStore` does the same but for many values, and has convenience methods for adding and removing individual items in the list.
+
+Stores represent a `File` on disk where your data will be persisted. To get a store, you must first create a `StoreProvider`. A `StoreProvider` represents a directory on disk that can house many store files. You can create an instance using the builder:
+
 ```java
-RxStore myStore = RxStore.with(someDirectory).using(new GsonConverter());
+StoreProvider storeProvider = StoreProvider.with(directory).using(new MoshiConverter());
 ```
 
-The second is just for Android that makes the process a little smoother.
+Or if you're on Android and you would like a convenient way to initialise a `StoreProvider` in a subdirectory of your app's private directory, you can use:
+
 ```java
-RxStore myStore = RxStore.withContext(context)
-    .in("someDir")
-    .using(new GsonConverter());
+StoreProvider storeProvider = StoreProvider.withContext(context).inDir("mySubDir").using(new MoshiConverter());
 ```
 
-The special Android method will use your app's private directory. Calling `in()` allows you to specify a subdirectory.
+Both builders also allow you to specify a `Scheduler` you would like async read/writes to occur on. By default they will create a new `Scheduler` running on a single thread to ensure that events are delivered in chronological sequence.
 
-----
+####Storing data
 
-RxStore supports simple put/get operations for individual objects as well as append/remove operations for `List`s of objects. All objects/lists are stored against a String key. That key is used to create a file in your previously specified directory.
+RxStore supports simple put/get operations for individual objects as well as append/remove operations for `Lists` of objects. All objects/lists are stored against a String key. That key is used to create a file in your previously specified directory.
 
-Say we have a class called `Dino`
+Say we have a model class called `Person`
 ```java
-public class Dino {
-	public String name;
-	public int armLength;
+public final class Person {
+	public final String name;
+	public final int age;
 }
 ```
 
-You can use `RxStore` to persist a single instance.
+To persist a single `Person`, we must first create `ValueStore`.
+
 ```java
-RxStore rxStore = RxStore.withContext(context)
-    .in("dinoDir")
-    .using(new GsonConverter());
-
-Dino dino = new Dino("Gregory", 37);
-
-rxStore.put("dino", dino)
-	  .subscribeOn(Schedulers.io())
-	  .observeOn(AndroidSchedulers.mainThread())
-	  .subscribe((persistedDino) -> {
-	    // Do something with your persisted dino.
-	  });
+ValueStore<Person> store = storeProvider.valueStore("person", Person.class);
 ```
 
-If you're an [rxandroid][8] user, this code will look very familiar to you. The write operation will occur *off* the main thread, and we get informed of the completion back *on* the main thread.
+There are two ways we can add a `Person` to our store: `store.put(person)` or `store.observePut(person)`. `put()` is a fire-and-forget method that will asynchronously write the value to disk. `observePut()` returns an RxJava `Single` that must be subscribed to in order for the write operation to begin. This is useful when incorporating the write operation into a chain, or would like to know when a write operation has completed.
 
-You could also store a `List` of toothy friends.
+Perhaps you're making use of Square's [Retrofit](http://square.github.io/retrofit/). You could download and persist data in a single rx chain.
+
 ```java
-List<Dino> dinos = getDinoList(); //Some method that returns an ArrayList of Dinos.
-
-rxStore.putList("dinoList", dinos, Dino.class)
-	  .subscribeOn(Schedulers.io())
-	  .observeOn(AndroidSchedulers.mainThead())
-	  .subscribe((persistedDinos) -> {
-	    // Do something with your persisted dino army.
-	  });
-```
-
-Are you using RxJava in conjunction with Square's [Retrofit][9]? You could download and persist data in one go.
-```java
-webServices.getDino()
-    .flatMap((dino) -> rxStore.put("dino", dino))
-    .subscribeOn(Schedulers.io())
-    .observeOn(AndroidSchedulers.mainThread())
-    .subscribe((dino) -> {
-      // Behold the downloaded and persisted dino
+webServices.getPerson()
+    .flatMap((person) -> store.put("person", person).toObservable())
+    .subscribe((person) -> {
+      // Do something with newly downloaded and persisted person.
     });
 ```
 
-Example
--------
+`ListStore` also has some handy methods such as `addToList(person)` or `removeFromList(person)` if you wanted to store a collection of people.
 
-Would you like to see this library in action on Android? Check out the `rxstore-android-example` directory.
+####Retrieving data
 
-![](images/example.png)
+When retrieving a value, we can use `store.get()` or `store.getBlocking()`. The former returning a `Single`, the latter blocking until the disk read and deserialisation is complete.
+
+It's worth noting that a `ValueStore` that has been cleared or not yet given a value will return `null` on `getBlocking()` and `null` for the value delivered in the `Single` from `get()`.
+
+A `ListStore` that has been cleared or not yet given a value will return an immutable empty `List`.
+
+####Observing data
+
+Another handy trick is to observe a store change over time. Calling `store.asObservable()` will give you an rx `Observable`. This `Observable` will immediately deliver the current value of the store on subscription, and will then deliver updated values if changes occur in `onNext()`. `onCompleted()` will only be called if the store is deleted.
+
+Kotlin
+------
+
+If you're working in Kotlin, there are also two convenience extension functions provided in the `rxstore-kotlin` artifact that make use of reified type parameters. This removes the need to pass the `Type` in the store initialisation methods.
+
+```kotlin
+val personStore = storeProvider.valueStore<Person>("singlePerson")
+val peopleStore = storeProvider.listStore<Person>("manyPeople")
+```
 
 Download
 --------
@@ -104,21 +100,29 @@ All artifacts are up on Maven Central.
 
 For the base library
 ```groovy
-compile 'au.com.gridstone.rxstore:rxstore:4.0.0'
+compile 'au.com.gridstone.rxstore:rxstore:5.0.0'
+```
+For the kotlin convenience functions
+```groovy
+compile 'au.com.gridstone.rxstore:rxstore-kotlin:5.0.0'
+```
+For the Moshi converter
+```groovy
+compile 'au.com.gridstone.rxstore:converter-moshi:5.0.0'
 ```
 For the Gson converter
 ```groovy
-compile 'au.com.gridstone.rxstore:converter-gson:4.0.0'
+compile 'au.com.gridstone.rxstore:converter-gson:5.0.0'
 ```
 For the Jackson converter
 ```groovy
-compile 'au.com.gridstone.rxstore:converter-jackson:4.0.0'
+compile 'au.com.gridstone.rxstore:converter-jackson:5.0.0'
 ```
 
 License
 --------
 
-    Copyright 2014 GRIDSTONE
+    Copyright 2016 GRIDSTONE
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -131,13 +135,3 @@ License
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
- [1]: https://github.com/ReactiveX/RxJava
- [2]: http://developer.android.com/guide/topics/data/data-storage.html
- [3]: http://developer.android.com/reference/android/content/SharedPreferences.html
- [4]: http://developer.android.com/reference/android/database/sqlite/SQLiteOpenHelper.html
- [5]: https://github.com/Gridstone/RxStore/blob/master/rxstore/src/main/java/au/com/gridstone/rxstore/Converter.java
- [6]: https://code.google.com/p/google-gson/
- [7]: http://jackson.codehaus.org/
- [8]: https://github.com/ReactiveX/RxAndroid
- [9]: http://square.github.io/retrofit/

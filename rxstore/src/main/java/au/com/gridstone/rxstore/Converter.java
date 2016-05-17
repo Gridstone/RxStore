@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2015
+ * Copyright (C) GRIDSTONE 2016
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 package au.com.gridstone.rxstore;
 
-import java.io.Reader;
-import java.io.Writer;
+import java.io.File;
 import java.lang.reflect.Type;
 
 /**
  * Convert objects to and from a format that allows them to be saved to disk.
  * <p>
- * Use a converter when initializing an {@link RxStore}
+ * Use a converter when initializing an {@link StoreProvider}
  * <pre>
  * {@code
  * RxStore.with(directory).using(converter);
@@ -34,10 +33,10 @@ public interface Converter {
   /**
    * Convert data into a serializable format and write to writer.
    */
-  <T> void write(T data, Writer writer) throws ConverterException;
+  <T> void write(T data, Type type, File file) throws ConverterException;
 
   /**
    * Pull typed data out of reader.
    */
-  <T> T read(Reader reader, Type type) throws ConverterException;
+  <T> T read(File file, Type type) throws ConverterException;
 }

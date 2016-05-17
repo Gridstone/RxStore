@@ -18,43 +18,50 @@ package au.com.gridstone.rxstore.converters;
 
 import au.com.gridstone.rxstore.Converter;
 import au.com.gridstone.rxstore.ConverterException;
-import com.google.gson.Gson;
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.IOException;
 import java.lang.reflect.Type;
+import okio.BufferedSink;
+import okio.BufferedSource;
+import okio.Okio;
 
-/**
- * A {@link Converter} that uses {@link Gson} to get the job done.
- */
-public class GsonConverter implements Converter {
-  private Gson gson;
+public class MoshiConverter implements Converter {
+  private final Moshi moshi;
 
-  public GsonConverter() {
-    this(new Gson());
+  public MoshiConverter() {
+    this(new Moshi.Builder().build());
   }
 
-  public GsonConverter(Gson gson) {
-    this.gson = gson;
+  public MoshiConverter(Moshi moshi) {
+    this.moshi = moshi;
   }
 
   @Override public <T> void write(T data, Type type, File file) throws ConverterException {
     try {
-      Writer writer = new FileWriter(file);
-      gson.toJson(data, type, writer);
-      writer.close();
-    } catch (Exception e) {
+      JsonAdapter<T> adapter = moshi.adapter(type);
+      BufferedSink sink = Okio.buffer(Okio.sink(file));
+      adapter.toJson(sink, data);
+      sink.close();
+    } catch (IOException e) {
       throw new ConverterException(e);
     }
   }
 
-  @Override public <T> T read(File file, Type type) throws ConverterException {
+  @Override public <T> T read(File file, Type type) {
     try {
-      Reader reader = new FileReader(file);
-      T value = gson.fromJson(reader, type);
-      reader.close();
+      JsonAdapter<T> adapter = moshi.adapter(type);
+      BufferedSource source = Okio.buffer(Okio.source(file));
+      T value;
+
+      if (source.exhausted()) {
+        value = null;
+      } else {
+        value = adapter.nullSafe().fromJson(source);
+      }
+
+      source.close();
       return value;
     } catch (Exception e) {
       throw new ConverterException(e);

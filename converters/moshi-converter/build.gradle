@@ -29,7 +29,7 @@ repositories {
 
 dependencies {
   compile project(':rxstore')
-  compile rootProject.ext.jackson
+  compile rootProject.ext.moshi
 
   testCompile rootProject.ext.junit
   testCompile rootProject.ext.truth
@@ -51,10 +51,10 @@ artifacts {
 
 publishing {
   publications {
-    JacksonConverter(MavenPublication) {
+    MoshiConverter(MavenPublication) {
       from components.java
       groupId GROUP
-      artifactId 'converter-jackson'
+      artifactId 'converter-moshi'
       version VERSION_NAME
       artifact sourcesJar
       artifact javadocJar
@@ -62,7 +62,7 @@ publishing {
       pom.withXml {
         asNode().children().last() + {
           resolveStrategy = Closure.DELEGATE_FIRST
-          name 'RxStore Jackson Converter'
+          name 'RxStore Moshi Converter'
           description DESCRIPTION
           url PROJECT_URL
           developers {
@@ -92,7 +92,7 @@ publishing {
 bintray {
   user = System.getenv('BINTRAY_USER')
   key = System.getenv('BINTRAY_KEY')
-  publications = ['JacksonConverter']
+  publications = ['MoshiConverter']
   pkg {
     repo = BINTRAY_REPO
     name = BINTRAY_NAME
