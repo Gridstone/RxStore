@@ -1,5 +1,8 @@
 Change Log
 ==========
+Version 5.0.1 *(2016-05-19)*
+* Fix artifacts being built against Java 8 instead of 1.6.
+
 Version 5.0.0 *(2016-05-17)*
 * Replace `RxStore` with `StoreProvider`
 * Stores have convenience fire-and-forget methods
