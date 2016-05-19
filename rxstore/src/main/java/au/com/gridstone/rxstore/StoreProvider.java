@@ -106,11 +106,11 @@ public final class StoreProvider {
   }
 
   public @NotNull <T> ValueStore<T> valueStore(@NotNull String key, @NotNull Type type) {
-    return new ValueStore<>(getFileForStore(key), converter, type, scheduler);
+    return new ValueStore<T>(getFileForStore(key), converter, type, scheduler);
   }
 
   @NotNull public <T> ListStore<T> listStore(@NotNull String key, @NotNull Type type) {
-    return new ListStore<>(getFileForStore(key), converter, new ListType(type), scheduler);
+    return new ListStore<T>(getFileForStore(key), converter, new ListType(type), scheduler);
   }
 
   /**
@@ -580,7 +580,7 @@ public final class StoreProvider {
       return get() //
           .map(new Func1<List<T>, List<T>>() {
             @Override public List<T> call(List<T> originalList) {
-              List<T> result = new ArrayList<>(originalList.size() + 1);
+              List<T> result = new ArrayList<T>(originalList.size() + 1);
               result.addAll(originalList);
               result.add(value);
               return result;
@@ -613,7 +613,7 @@ public final class StoreProvider {
       return get() //
           .map(new Func1<List<T>, List<T>>() {
             @Override public List<T> call(List<T> originalList) {
-              List<T> modifiedList = new ArrayList<>(originalList);
+              List<T> modifiedList = new ArrayList<T>(originalList);
               modifiedList.remove(value);
               return modifiedList;
             }
@@ -640,7 +640,7 @@ public final class StoreProvider {
       return get() //
           .map(new Func1<List<T>, List<T>>() {
             @Override public List<T> call(List<T> originalList) {
-              List<T> modifiedList = new ArrayList<>(originalList);
+              List<T> modifiedList = new ArrayList<T>(originalList);
               modifiedList.remove(position);
               return modifiedList;
             }
@@ -676,7 +676,7 @@ public final class StoreProvider {
                 }
               }
 
-              List<T> modifiedList = new ArrayList<>(originalList);
+              List<T> modifiedList = new ArrayList<T>(originalList);
 
               if (indexOfItemToReplace != -1) {
                 modifiedList.remove(indexOfItemToReplace);
