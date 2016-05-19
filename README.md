@@ -100,23 +100,23 @@ All artifacts are up on Maven Central.
 
 For the base library
 ```groovy
-compile 'au.com.gridstone.rxstore:rxstore:5.0.1'
+compile 'au.com.gridstone.rxstore:rxstore:5.0.2'
 ```
 For the kotlin convenience functions
 ```groovy
-compile 'au.com.gridstone.rxstore:rxstore-kotlin:5.0.1'
+compile 'au.com.gridstone.rxstore:rxstore-kotlin:5.0.2'
 ```
 For the Moshi converter
 ```groovy
-compile 'au.com.gridstone.rxstore:converter-moshi:5.0.1'
+compile 'au.com.gridstone.rxstore:converter-moshi:5.0.2'
 ```
 For the Gson converter
 ```groovy
-compile 'au.com.gridstone.rxstore:converter-gson:5.0.1'
+compile 'au.com.gridstone.rxstore:converter-gson:5.0.2'
 ```
 For the Jackson converter
 ```groovy
-compile 'au.com.gridstone.rxstore:converter-jackson:5.0.1'
+compile 'au.com.gridstone.rxstore:converter-jackson:5.0.2'
 ```
 
 License

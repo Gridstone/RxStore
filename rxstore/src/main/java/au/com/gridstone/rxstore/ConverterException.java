@@ -21,7 +21,7 @@ import java.lang.reflect.Type;
 
 /**
  * Represents something going horribly wrong when a {@link Converter} tries to
- * {@link Converter#read(File, Type)} or {@link Converter#write(Object, File)}.
+ * {@link Converter#read(File, Type)} or {@link Converter#write(Object, Type, File)}.
  */
 public class ConverterException extends RuntimeException {
   public ConverterException() {

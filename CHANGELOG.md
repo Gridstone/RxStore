@@ -1,5 +1,8 @@
 Change Log
 ==========
+Version 5.0.2 *(2016-05-20)*
+* Fix Android compatibility by switching to jetbrains annotations to `annotations-java5`.
+
 Version 5.0.1 *(2016-05-19)*
 * Fix artifacts being built against Java 8 instead of 1.6.
 
