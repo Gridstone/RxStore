@@ -577,21 +577,29 @@ public final class StoreProvider {
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
     @NotNull public Single<List<T>> observeAddToList(@NotNull final T value) {
-      return get() //
-          .map(new Func1<List<T>, List<T>>() {
-            @Override public List<T> call(List<T> originalList) {
-              List<T> result = new ArrayList<T>(originalList.size() + 1);
-              result.addAll(originalList);
-              result.add(value);
-              return result;
-            }
-          }) //
-          .flatMap(new Func1<List<T>, Single<? extends List<T>>>() {
-            @Override public Single<? extends List<T>> call(List<T> modifiedList) {
-              return observePut(modifiedList);
-            }
-          }) //
-          .subscribeOn(scheduler);
+      return Single.create(new Single.OnSubscribe<List<T>>() {
+        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+          try {
+            if (!file.exists()) throw new IOException("This store has already been deleted!");
+
+            runInWriteLock(readWriteLock, new Runnable() {
+              @Override public void run() {
+                List<T> originalList = converter.read(file, type);
+                if (originalList == null) originalList = Collections.emptyList();
+
+                List<T> result = new ArrayList<T>(originalList.size() + 1);
+                result.addAll(originalList);
+                result.add(value);
+
+                converter.write(result, type, file);
+                updateSubject.onNext(result);
+              }
+            });
+          } catch (Exception e) {
+            subscriber.onError(e);
+          }
+        }
+      }).subscribeOn(scheduler);
     }
 
     /**
@@ -610,20 +618,28 @@ public final class StoreProvider {
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
     @NotNull public Single<List<T>> observeRemoveFromList(@NotNull final T value) {
-      return get() //
-          .map(new Func1<List<T>, List<T>>() {
-            @Override public List<T> call(List<T> originalList) {
-              List<T> modifiedList = new ArrayList<T>(originalList);
-              modifiedList.remove(value);
-              return modifiedList;
-            }
-          }) //
-          .flatMap(new Func1<List<T>, Single<? extends List<T>>>() {
-            @Override public Single<? extends List<T>> call(List<T> modifiedList) {
-              return observePut(modifiedList);
-            }
-          }) //
-          .subscribeOn(scheduler);
+      return Single.create(new Single.OnSubscribe<List<T>>() {
+        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+          try {
+            if (!file.exists()) throw new IOException("This store has already been deleted!");
+
+            runInWriteLock(readWriteLock, new Runnable() {
+              @Override public void run() {
+                List<T> originalList = converter.read(file, type);
+                if (originalList == null) originalList = Collections.emptyList();
+
+                List<T> modifiedList = new ArrayList<T>(originalList);
+                modifiedList.remove(value);
+
+                converter.write(modifiedList, type, file);
+                updateSubject.onNext(modifiedList);
+              }
+            });
+          } catch (Exception e) {
+            subscriber.onError(e);
+          }
+        }
+      }).subscribeOn(scheduler);
     }
 
     public void removeFromList(@NotNull T value) {
@@ -637,20 +653,28 @@ public final class StoreProvider {
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
     @NotNull public Single<List<T>> observeRemoveFromList(final int position) {
-      return get() //
-          .map(new Func1<List<T>, List<T>>() {
-            @Override public List<T> call(List<T> originalList) {
-              List<T> modifiedList = new ArrayList<T>(originalList);
-              modifiedList.remove(position);
-              return modifiedList;
-            }
-          }) //
-          .flatMap(new Func1<List<T>, Single<? extends List<T>>>() {
-            @Override public Single<? extends List<T>> call(List<T> modifiedList) {
-              return observePut(modifiedList);
-            }
-          }) //
-          .subscribeOn(scheduler);
+      return Single.create(new Single.OnSubscribe<List<T>>() {
+        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+          try {
+            if (!file.exists()) throw new IOException("This store has already been deleted!");
+
+            runInWriteLock(readWriteLock, new Runnable() {
+              @Override public void run() {
+                List<T> originalList = converter.read(file, type);
+                if (originalList == null) originalList = Collections.emptyList();
+
+                List<T> modifiedList = new ArrayList<T>(originalList);
+                modifiedList.remove(position);
+
+                converter.write(modifiedList, type, file);
+                updateSubject.onNext(modifiedList);
+              }
+            });
+          } catch (Exception e) {
+            subscriber.onError(e);
+          }
+        }
+      }).subscribeOn(scheduler);
     }
 
     public void removeFromList(int position) {
@@ -665,33 +689,40 @@ public final class StoreProvider {
      */
     @NotNull public Single<List<T>> observeReplace(@NotNull final T value,
         @NotNull final ReplacePredicateFunc<T> predicateFunc) {
-      return get() //
-          .map(new Func1<List<T>, List<T>>() {
-            @Override public List<T> call(List<T> originalList) {
-              int indexOfItemToReplace = -1;
+      return Single.create(new Single.OnSubscribe<List<T>>() {
+        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+          try {
+            if (!file.exists()) throw new IOException("This store has already been deleted!");
 
-              for (int i = 0; i < originalList.size(); i++) {
-                if (predicateFunc.shouldReplace(originalList.get(i))) {
-                  indexOfItemToReplace = i;
+            runInWriteLock(readWriteLock, new Runnable() {
+              @Override public void run() {
+                List<T> originalList = converter.read(file, type);
+                if (originalList == null) originalList = Collections.emptyList();
+
+                int indexOfItemToReplace = -1;
+
+                for (int i = 0; i < originalList.size(); i++) {
+                  if (predicateFunc.shouldReplace(originalList.get(i))) {
+                    indexOfItemToReplace = i;
+                  }
                 }
+
+                List<T> modifiedList = new ArrayList<T>(originalList);
+
+                if (indexOfItemToReplace != -1) {
+                  modifiedList.remove(indexOfItemToReplace);
+                  modifiedList.add(indexOfItemToReplace, value);
+                }
+
+                converter.write(modifiedList, type, file);
+                updateSubject.onNext(modifiedList);
               }
-
-              List<T> modifiedList = new ArrayList<T>(originalList);
-
-              if (indexOfItemToReplace != -1) {
-                modifiedList.remove(indexOfItemToReplace);
-                modifiedList.add(indexOfItemToReplace, value);
-              }
-
-              return modifiedList;
-            }
-          }) //
-          .flatMap(new Func1<List<T>, Single<? extends List<T>>>() {
-            @Override public Single<? extends List<T>> call(List<T> modifiedList) {
-              return observePut(modifiedList);
-            }
-          }) //
-          .subscribeOn(scheduler);
+            });
+          } catch (Exception e) {
+            subscriber.onError(e);
+          }
+        }
+      }).subscribeOn(scheduler);
     }
 
     /**
