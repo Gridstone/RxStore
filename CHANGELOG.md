@@ -1,5 +1,8 @@
 Change Log
 ==========
+Version 5.0.3 *(2016-09-14)*
+* Fix potential race conditions in `ListStore's` utility methods.
+
 Version 5.0.2 *(2016-05-20)*
 * Fix Android compatibility by switching to jetbrains annotations to `annotations-java5`.
 
