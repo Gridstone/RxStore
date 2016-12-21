@@ -158,8 +158,8 @@ public final class StoreProviderTest {
     TestData value = new TestData("Test", 1);
     ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
 
-    TestData putValue = store.observePut(value).timeout(1, SECONDS).toBlocking().value();
-    assertThat(putValue).isEqualTo(value);
+    TestData updatedValue = store.observePut(value).timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedValue).isEqualTo(value);
   }
 
   @Test public void observeClearProducesItem() {
@@ -169,8 +169,8 @@ public final class StoreProviderTest {
     store.put(value);
     assertThat(store.getBlocking()).isEqualTo(value);
 
-    TestData clearedValue = store.observeClear().timeout(1, SECONDS).toBlocking().value();
-    assertThat(clearedValue).isNull();
+    TestData updatedValue = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedValue).isNull();
   }
 
   @Test public void observeDeleteProducesItem() {
@@ -180,8 +180,8 @@ public final class StoreProviderTest {
     store.put(value);
     assertThat(store.getBlocking()).isEqualTo(value);
 
-    TestData deletedValue = store.observeDelete().timeout(1, SECONDS).toBlocking().value();
-    assertThat(deletedValue).isNull();
+    TestData updatedValue = store.observeDelete().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedValue).isNull();
   }
 
   @Test public void putAndClearList() {
@@ -347,16 +347,16 @@ public final class StoreProviderTest {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
 
-    List<TestData> putData = store.observePut(list).timeout(1, SECONDS).toBlocking().value();
-    assertThat(putData).isEqualTo(list);
+    List<TestData> updatedList = store.observePut(list).timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedList).isEqualTo(list);
   }
 
   @Test public void observeAddToListProducesItem() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     TestData value = new TestData("Test1", 1);
 
-    List<TestData> putList = store.observeAddToList(value).timeout(1, SECONDS).toBlocking().value();
-    assertThat(putList).containsExactly(value);
+    List<TestData> modifiedList = store.observeAddToList(value).timeout(1, SECONDS).toBlocking().value();
+    assertThat(modifiedList).containsExactly(value);
   }
 
   @Test public void observeRemoveFromListProducesItem() {
@@ -381,8 +381,8 @@ public final class StoreProviderTest {
     store.put(list);
     assertThat(store.getBlocking()).isEqualTo(list);
 
-    List<TestData> clearedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
-    assertThat(clearedList).isEmpty();
+    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedList).isEmpty();
   }
 
   @Test public void observeDeleteListProducesItem() {
@@ -392,8 +392,8 @@ public final class StoreProviderTest {
     store.put(list);
     assertThat(store.getBlocking()).isEqualTo(list);
 
-    List<TestData> deletedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
-    assertThat(deletedList).isEmpty();
+    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedList).isEmpty();
   }
 
   private static class TestData {
