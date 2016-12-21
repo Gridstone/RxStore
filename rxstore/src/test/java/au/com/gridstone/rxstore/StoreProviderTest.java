@@ -131,7 +131,7 @@ public final class StoreProviderTest {
 
   @Test public void updatesTriggerObservable() {
     ValueStore<TestData> valueStore = storeProvider.valueStore("testValue", TestData.class);
-    RecordingObserver<TestData> observer = new RecordingObserver<>();
+    RecordingObserver<TestData> observer = new RecordingObserver<TestData>();
     TestData value = new TestData("Test", 1);
 
     valueStore.asObservable().subscribe(observer);
@@ -184,7 +184,7 @@ public final class StoreProviderTest {
     TestData newValue = new TestData("TestAddition", 123);
     store.addToList(newValue);
 
-    List<TestData> listPlusNewValue = new ArrayList<>(list);
+    List<TestData> listPlusNewValue = new ArrayList<TestData>(list);
     listPlusNewValue.add(newValue);
 
     assertThat(store.getBlocking()).containsExactlyElementsIn(listPlusNewValue);
@@ -225,7 +225,7 @@ public final class StoreProviderTest {
 
   @Test public void updateToListTriggerObservable() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
-    RecordingObserver<List<TestData>> observer = new RecordingObserver<>();
+    RecordingObserver<List<TestData>> observer = new RecordingObserver<List<TestData>>();
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
 
     store.asObservable().subscribe(observer);
@@ -236,7 +236,7 @@ public final class StoreProviderTest {
 
     TestData newValue = new TestData("Test3", 3);
     store.addToList(newValue);
-    List<TestData> expectedList = new ArrayList<>(list);
+    List<TestData> expectedList = new ArrayList<TestData>(list);
     expectedList.add(newValue);
     assertThat(observer.takeNext()).isEqualTo(expectedList);
 
@@ -313,8 +313,8 @@ public final class StoreProviderTest {
   }
 
   private static class TestData {
-    public final String string;
-    public final int integer;
+    final String string;
+    final int integer;
 
     TestData(String string, int integer) {
       this.string = string;
@@ -339,7 +339,7 @@ public final class StoreProviderTest {
       return string + "," + integer;
     }
 
-    public static TestData fromString(String string) {
+    static TestData fromString(String string) {
       String[] splitString = string.split(",");
       return new TestData(splitString[0], Integer.parseInt(splitString[1]));
     }
@@ -384,7 +384,7 @@ public final class StoreProviderTest {
         if (type instanceof StoreProvider.ListType) {
           // Stored string contains each TestData separated by a "~" character.
           String[] splitString = storedString.split("~");
-          List<TestData> list = new ArrayList<>(splitString.length);
+          List<TestData> list = new ArrayList<TestData>(splitString.length);
 
           for (String itemString : splitString) {
             list.add(TestData.fromString(itemString));

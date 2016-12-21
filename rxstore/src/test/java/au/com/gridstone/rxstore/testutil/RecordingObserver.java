@@ -9,7 +9,7 @@ import rx.Observer;
 import static com.google.common.truth.Truth.assertThat;
 
 public final class RecordingObserver<T> implements Observer<T> {
-  private final BlockingDeque<Object> events = new LinkedBlockingDeque<>();
+  private final BlockingDeque<Object> events = new LinkedBlockingDeque<Object>();
 
   @Override public void onCompleted() {
     events.addLast(new OnCompleted());
