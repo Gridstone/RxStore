@@ -39,6 +39,7 @@ import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public final class StoreProviderTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
@@ -52,29 +53,29 @@ public final class StoreProviderTest {
   }
 
   @Test public void putAndClear() {
-    ValueStore<TestData> valueStore = storeProvider.valueStore("testValue", TestData.class);
+    ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
     TestData value = new TestData("Test", 1);
-    valueStore.put(value);
-    assertThat(valueStore.getBlocking()).isEqualTo(value);
+    store.put(value);
+    assertThat(store.getBlocking()).isEqualTo(value);
 
-    valueStore.clear();
-    assertThat(valueStore.getBlocking()).isNull();
+    store.clear();
+    assertThat(store.getBlocking()).isNull();
   }
 
   @Test public void getOnEmptyReturnsNull() {
-    ValueStore<TestData> valueStore = storeProvider.valueStore("testValue", TestData.class);
-    assertThat(valueStore.getBlocking()).isNull();
+    ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
+    assertThat(store.getBlocking()).isNull();
   }
 
   @Test public void interactionsWithDeletedFail() {
-    ValueStore<TestData> valueStore = storeProvider.valueStore("testValue", TestData.class);
+    ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
     TestData value = new TestData("Test", 1);
-    valueStore.put(value);
-    valueStore.delete();
+    store.put(value);
+    store.delete();
 
     String expectedMessage = "This store has been deleted!";
 
-    Throwable getError = valueStore.get()
+    Throwable getError = store.get()
         .toObservable()
         .materialize()
         .filter(new Func1<Notification<TestData>, Boolean>() {
@@ -92,7 +93,7 @@ public final class StoreProviderTest {
 
     assertThat(getError).hasMessage(expectedMessage);
 
-    Throwable putError = valueStore.observePut(new TestData("Test2", 2))
+    Throwable putError = store.observePut(new TestData("Test2", 2))
         .toObservable()
         .materialize()
         .filter(new Func1<Notification<TestData>, Boolean>() {
@@ -110,7 +111,7 @@ public final class StoreProviderTest {
 
     assertThat(putError).hasMessage(expectedMessage);
 
-    Throwable clearError = valueStore.observeClear()
+    Throwable clearError = store.observeClear()
         .toObservable()
         .materialize()
         .filter(new Func1<Notification<TestData>, Boolean>() {
@@ -130,27 +131,57 @@ public final class StoreProviderTest {
   }
 
   @Test public void updatesTriggerObservable() {
-    ValueStore<TestData> valueStore = storeProvider.valueStore("testValue", TestData.class);
-    RecordingObserver<TestData> observer = new RecordingObserver<>();
+    ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
+    RecordingObserver<TestData> observer = new RecordingObserver<TestData>();
     TestData value = new TestData("Test", 1);
 
-    valueStore.asObservable().subscribe(observer);
+    store.asObservable().subscribe(observer);
 
     assertThat(observer.takeNext()).isNull();
-    valueStore.put(value);
+    store.put(value);
     assertThat(observer.takeNext()).isEqualTo(value);
 
     TestData value2 = new TestData("Test2", 2);
-    valueStore.put(value2);
+    store.put(value2);
     assertThat(observer.takeNext()).isEqualTo(value2);
 
-    valueStore.clear();
+    store.clear();
     assertThat(observer.takeNext()).isNull();
 
     observer.assertNoMoreEvents();
-    valueStore.delete();
+    store.delete();
     assertThat(observer.takeNext()).isNull();
     observer.assertOnCompleted();
+  }
+
+  @Test public void observePutProducesItem() {
+    TestData value = new TestData("Test", 1);
+    ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
+
+    TestData updatedValue = store.observePut(value).timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedValue).isEqualTo(value);
+  }
+
+  @Test public void observeClearProducesItem() {
+    TestData value = new TestData("Test", 1);
+    ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
+
+    store.put(value);
+    assertThat(store.getBlocking()).isEqualTo(value);
+
+    TestData updatedValue = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedValue).isNull();
+  }
+
+  @Test public void observeDeleteProducesItem() {
+    TestData value = new TestData("Test", 1);
+    ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
+
+    store.put(value);
+    assertThat(store.getBlocking()).isEqualTo(value);
+
+    TestData updatedValue = store.observeDelete().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedValue).isNull();
   }
 
   @Test public void putAndClearList() {
@@ -184,7 +215,7 @@ public final class StoreProviderTest {
     TestData newValue = new TestData("TestAddition", 123);
     store.addToList(newValue);
 
-    List<TestData> listPlusNewValue = new ArrayList<>(list);
+    List<TestData> listPlusNewValue = new ArrayList<TestData>(list);
     listPlusNewValue.add(newValue);
 
     assertThat(store.getBlocking()).containsExactlyElementsIn(listPlusNewValue);
@@ -225,7 +256,7 @@ public final class StoreProviderTest {
 
   @Test public void updateToListTriggerObservable() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
-    RecordingObserver<List<TestData>> observer = new RecordingObserver<>();
+    RecordingObserver<List<TestData>> observer = new RecordingObserver<List<TestData>>();
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
 
     store.asObservable().subscribe(observer);
@@ -236,7 +267,7 @@ public final class StoreProviderTest {
 
     TestData newValue = new TestData("Test3", 3);
     store.addToList(newValue);
-    List<TestData> expectedList = new ArrayList<>(list);
+    List<TestData> expectedList = new ArrayList<TestData>(list);
     expectedList.add(newValue);
     assertThat(observer.takeNext()).isEqualTo(expectedList);
 
@@ -312,9 +343,62 @@ public final class StoreProviderTest {
     assertThat(clearError).hasMessage(expectedMessage);
   }
 
+  @Test public void observePutListProducesItem() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+
+    List<TestData> updatedList = store.observePut(list).timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedList).isEqualTo(list);
+  }
+
+  @Test public void observeAddToListProducesItem() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    TestData value = new TestData("Test1", 1);
+
+    List<TestData> modifiedList = store.observeAddToList(value).timeout(1, SECONDS).toBlocking().value();
+    assertThat(modifiedList).containsExactly(value);
+  }
+
+  @Test public void observeRemoveFromListProducesItem() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+
+    store.put(list);
+    assertThat(store.getBlocking()).isEqualTo(list);
+
+    List<TestData> modifiedList = store.observeRemoveFromList(new TestData("Test1", 1))
+        .timeout(1, SECONDS)
+        .toBlocking()
+        .value();
+
+    assertThat(modifiedList).containsExactly(new TestData("Test2", 2));
+  }
+
+  @Test public void observeClearListProducesItem() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+
+    store.put(list);
+    assertThat(store.getBlocking()).isEqualTo(list);
+
+    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedList).isEmpty();
+  }
+
+  @Test public void observeDeleteListProducesItem() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+
+    store.put(list);
+    assertThat(store.getBlocking()).isEqualTo(list);
+
+    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    assertThat(updatedList).isEmpty();
+  }
+
   private static class TestData {
-    public final String string;
-    public final int integer;
+    final String string;
+    final int integer;
 
     TestData(String string, int integer) {
       this.string = string;
@@ -339,7 +423,7 @@ public final class StoreProviderTest {
       return string + "," + integer;
     }
 
-    public static TestData fromString(String string) {
+    static TestData fromString(String string) {
       String[] splitString = string.split(",");
       return new TestData(splitString[0], Integer.parseInt(splitString[1]));
     }
@@ -384,7 +468,7 @@ public final class StoreProviderTest {
         if (type instanceof StoreProvider.ListType) {
           // Stored string contains each TestData separated by a "~" character.
           String[] splitString = storedString.split("~");
-          List<TestData> list = new ArrayList<>(splitString.length);
+          List<TestData> list = new ArrayList<TestData>(splitString.length);
 
           for (String itemString : splitString) {
             list.add(TestData.fromString(itemString));

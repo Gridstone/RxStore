@@ -578,7 +578,7 @@ public final class StoreProvider {
      */
     @NotNull public Single<List<T>> observeAddToList(@NotNull final T value) {
       return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
@@ -592,6 +592,7 @@ public final class StoreProvider {
                 result.add(value);
 
                 converter.write(result, type, file);
+                subscriber.onSuccess(result);
                 updateSubject.onNext(result);
               }
             });
@@ -619,7 +620,7 @@ public final class StoreProvider {
      */
     @NotNull public Single<List<T>> observeRemoveFromList(@NotNull final T value) {
       return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
@@ -632,6 +633,7 @@ public final class StoreProvider {
                 modifiedList.remove(value);
 
                 converter.write(modifiedList, type, file);
+                subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
             });
