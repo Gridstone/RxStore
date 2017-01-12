@@ -864,8 +864,8 @@ public final class StoreProvider {
     } finally {
       for (int i = 0; i < readCount; i++) {
         readLock.lock();
-        writeLock.unlock();
       }
+      writeLock.unlock();
     }
   }
 }
