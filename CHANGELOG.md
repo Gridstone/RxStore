@@ -1,5 +1,8 @@
 Change Log
 ==========
+Version 5.0.5 *(2017-01-13)*
+* Fix write lock being unlocked when it shouldn't.
+
 Version 5.0.4 *(2016-12-21)*
 * Fix `observeAddToList()` and `observeRemoveFromList()` not actually emitting modified lists.
 
