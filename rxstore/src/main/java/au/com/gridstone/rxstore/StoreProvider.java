@@ -773,6 +773,67 @@ public final class StoreProvider {
     }
 
     /**
+     * Replace the first item in the list that the provided predicate returns true for with the
+     * provided item. If no matching item is found, add the provided item into the list.
+     * <p>
+     * The {@link Scheduler} used for this operation will be the one specified in
+     * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
+     */
+    @NotNull public Single<List<T>> observeAddOrReplace(@NotNull final T value,
+        @NotNull final ReplacePredicateFunc<T> predicateFunc) {
+      return Single.create(new Single.OnSubscribe<List<T>>() {
+        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+          try {
+            if (!file.exists()) throw new IOException("This store has already been deleted!");
+
+            runInWriteLock(readWriteLock, new Runnable() {
+              @Override public void run() {
+                List<T> originalList = converter.read(file, type);
+                if (originalList == null) originalList = Collections.emptyList();
+
+                int indexOfItemToReplace = -1;
+
+                for (int i = 0; i < originalList.size(); i++) {
+                  if (predicateFunc.shouldReplace(originalList.get(i))) {
+                    indexOfItemToReplace = i;
+                    break;
+                  }
+                }
+
+                int modifiedListSize = indexOfItemToReplace == -1 ? originalList.size() + 1 :
+                                        originalList.size();
+
+                List<T> modifiedList = new ArrayList<T>(modifiedListSize);
+                modifiedList.addAll(originalList);
+
+                if (indexOfItemToReplace == -1) {
+                  modifiedList.add(value);
+                } else {
+                  modifiedList.remove(indexOfItemToReplace);
+                  modifiedList.add(indexOfItemToReplace, value);
+                }
+
+                converter.write(modifiedList, type, file);
+                subscriber.onSuccess(modifiedList);
+                updateSubject.onNext(modifiedList);
+              }
+            });
+          } catch (Exception e) {
+            subscriber.onError(e);
+          }
+        }
+      }).subscribeOn(scheduler);
+    }
+
+    /**
+     * Replace the first item in the list that the provided predicate returns true for with the
+     * provided item. If no matching item is found, add the provided item into the list.
+     */
+    public void addOrReplace(@NotNull T value, @NotNull ReplacePredicateFunc<T> predicateFunc) {
+      observeAddOrReplace(value, predicateFunc).subscribe(errorThrowingObserver);
+    }
+
+    /**
      * Delete the file associated with this store, render it completely unusable, and
      * observe the operation.
      * <p>

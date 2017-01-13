@@ -231,34 +231,30 @@ public final class StoreProviderTest {
   }
 
   @Test public void removeFromListWithPredicate_oneItemRemoved() {
-    StoreProvider.RemovePredicateFunc<TestData> predicateFunc =
-        new StoreProvider.RemovePredicateFunc<TestData>() {
-          @Override public boolean shouldRemove(TestData value) {
-            return value.integer == 1;
-          }
-        };
-
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
     store.put(list);
 
-    store.removeFromList(predicateFunc);
+    store.removeFromList(new StoreProvider.RemovePredicateFunc<TestData>() {
+      @Override public boolean shouldRemove(TestData value) {
+        return value.integer == 1;
+      }
+    });
+
     assertThat(store.getBlocking()).containsExactly(new TestData("Test2", 2));
   }
 
   @Test public void removeFromListWithPredicate_noItemRemoved() {
-    StoreProvider.RemovePredicateFunc<TestData> predicateFunc =
-        new StoreProvider.RemovePredicateFunc<TestData>() {
-          @Override public boolean shouldRemove(TestData value) {
-            return value.integer == 1 && !value.string.contains("1");
-          }
-        };
-
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
     store.put(list);
 
-    store.removeFromList(predicateFunc);
+    store.removeFromList(new StoreProvider.RemovePredicateFunc<TestData>() {
+      @Override public boolean shouldRemove(TestData value) {
+        return value.integer == 1 && !value.string.contains("1");
+      }
+    });
+
     assertThat(store.getBlocking()).isEqualTo(list);
   }
 
@@ -272,6 +268,36 @@ public final class StoreProviderTest {
   }
 
   @Test public void replaceInList() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+    store.put(list);
+
+    store.replace(new TestData("Test3", 3), new StoreProvider.ReplacePredicateFunc<TestData>() {
+      @Override public boolean shouldReplace(TestData value) {
+        return value.integer == 2;
+      }
+    });
+
+    assertThat(store.getBlocking()).containsExactly(new TestData("Test1", 1),
+        new TestData("Test3", 3));
+  }
+
+  @Test public void addOrReplace_itemAdded() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+    store.put(list);
+
+    store.addOrReplace(new TestData("Test3", 3), new StoreProvider.ReplacePredicateFunc<TestData>() {
+      @Override public boolean shouldReplace(TestData value) {
+        return value.integer == 3;
+      }
+    });
+
+    assertThat(store.getBlocking()).containsExactly(new TestData("Test1", 1),
+        new TestData("Test2", 2), new TestData("Test3", 3));
+  }
+
+  @Test public void addOrReplace_itemReplaced() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
     store.put(list);
@@ -391,6 +417,38 @@ public final class StoreProviderTest {
     assertThat(modifiedList).containsExactly(value);
   }
 
+  @Test public void observeAddOrReplace_itemAdded() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+    store.put(list);
+
+    List<TestData> modifiedList = store.observeAddOrReplace(new TestData("Test3", 3),
+        new StoreProvider.ReplacePredicateFunc<TestData>() {
+          @Override public boolean shouldReplace(TestData value) {
+            return value.integer == 3;
+          }
+        }).timeout(1, SECONDS).toBlocking().value();
+
+    assertThat(modifiedList).containsExactly(new TestData("Test1", 1), new TestData("Test2", 2),
+        new TestData("Test3", 3));
+  }
+
+  @Test public void observeAddOrReplace_itemReplaced() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+    store.put(list);
+
+    List<TestData> modifiedList = store.observeAddOrReplace(new TestData("Test3", 3),
+        new StoreProvider.ReplacePredicateFunc<TestData>() {
+          @Override public boolean shouldReplace(TestData value) {
+            return value.integer == 2;
+          }
+        }).timeout(1, SECONDS).toBlocking().value();
+
+    assertThat(modifiedList).containsExactly(new TestData("Test1", 1),
+        new TestData("Test3", 3));
+  }
+
   @Test public void observeRemoveFromListProducesItem() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
@@ -407,20 +465,18 @@ public final class StoreProviderTest {
   }
 
   @Test public void observeRemoveFromListWithPredicate_oneItemRemoved() {
-    StoreProvider.RemovePredicateFunc<TestData> predicateFunc =
-        new StoreProvider.RemovePredicateFunc<TestData>() {
-          @Override public boolean shouldRemove(TestData value) {
-            return value.integer == 1;
-          }
-        };
-
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
 
     store.put(list);
     assertThat(store.getBlocking()).isEqualTo(list);
 
-    List<TestData> modifiedList = store.observeRemoveFromList(predicateFunc)
+    List<TestData> modifiedList =
+        store.observeRemoveFromList(new StoreProvider.RemovePredicateFunc<TestData>() {
+          @Override public boolean shouldRemove(TestData value) {
+            return value.integer == 1;
+          }
+        })
         .timeout(1, SECONDS)
         .toBlocking()
         .value();
@@ -429,20 +485,18 @@ public final class StoreProviderTest {
   }
 
   @Test public void observeRemoveFromListWithPredicate_noItemRemoved() {
-    StoreProvider.RemovePredicateFunc<TestData> predicateFunc =
-        new StoreProvider.RemovePredicateFunc<TestData>() {
-          @Override public boolean shouldRemove(TestData value) {
-            return value.integer == 1 && !value.string.contains("1");
-          }
-        };
-
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
 
     store.put(list);
     assertThat(store.getBlocking()).isEqualTo(list);
 
-    List<TestData> modifiedList = store.observeRemoveFromList(predicateFunc)
+    List<TestData> modifiedList =
+        store.observeRemoveFromList(new StoreProvider.RemovePredicateFunc<TestData>() {
+          @Override public boolean shouldRemove(TestData value) {
+            return value.integer == 1 && !value.string.contains("1");
+          }
+        })
         .timeout(1, SECONDS)
         .toBlocking()
         .value();
