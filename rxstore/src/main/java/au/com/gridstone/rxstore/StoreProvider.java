@@ -619,6 +619,28 @@ public final class StoreProvider {
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
     @NotNull public Single<List<T>> observeRemoveFromList(@NotNull final T value) {
+      return observeRemoveFromList(new RemovePredicateFunc<T>() {
+        @Override public boolean shouldRemove(T anotherValue) {
+          return value.equals(anotherValue);
+        }
+      });
+    }
+
+    /**
+     * Remove an item from the list if it exists.
+     */
+    public void removeFromList(@NotNull T value) {
+      observeRemoveFromList(value).subscribe(errorThrowingObserver);
+    }
+
+    /**
+     * Remove the first item in the list that the provided predicate returns true for and observe
+     * the operation.
+     * <p>
+     * The {@link Scheduler} used for this operation will be the one specified in
+     * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
+     */
+    @NotNull public Single<List<T>> observeRemoveFromList(@NotNull final RemovePredicateFunc<T> predicateFunc) {
       return Single.create(new Single.OnSubscribe<List<T>>() {
         @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
           try {
@@ -629,8 +651,20 @@ public final class StoreProvider {
                 List<T> originalList = converter.read(file, type);
                 if (originalList == null) originalList = Collections.emptyList();
 
+                int indexOfItemToRemove = -1;
+
+                for (int i = 0; i < originalList.size(); i++) {
+                  if (predicateFunc.shouldRemove(originalList.get(i))) {
+                    indexOfItemToRemove = i;
+                    break;
+                  }
+                }
+
                 List<T> modifiedList = new ArrayList<T>(originalList);
-                modifiedList.remove(value);
+
+                if (indexOfItemToRemove != -1) {
+                  modifiedList.remove(indexOfItemToRemove);
+                }
 
                 converter.write(modifiedList, type, file);
                 subscriber.onSuccess(modifiedList);
@@ -644,8 +678,11 @@ public final class StoreProvider {
       }).subscribeOn(scheduler);
     }
 
-    public void removeFromList(@NotNull T value) {
-      observeRemoveFromList(value).subscribe(errorThrowingObserver);
+    /**
+     * Remove an item from the list that the provided predicate returns true for.
+     */
+    public void removeFromList(@NotNull final RemovePredicateFunc<T> predicateFunc) {
+      observeRemoveFromList(predicateFunc).subscribe(errorThrowingObserver);
     }
 
     /**
@@ -795,6 +832,10 @@ public final class StoreProvider {
 
   public interface ReplacePredicateFunc<T> {
     boolean shouldReplace(T value);
+  }
+
+  public interface RemovePredicateFunc<T> {
+    boolean shouldRemove(T value);
   }
 
   private static Observer<Object> errorThrowingObserver = new Observer<Object>() {
