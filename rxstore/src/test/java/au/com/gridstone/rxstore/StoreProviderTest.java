@@ -492,10 +492,7 @@ public final class StoreProviderTest {
           @Override public boolean shouldRemove(TestData value) {
             return value.integer == 1;
           }
-        })
-        .timeout(1, SECONDS)
-        .toBlocking()
-        .value();
+        }).timeout(1, SECONDS).toBlocking().value();
 
     assertThat(modifiedList).containsExactly(new TestData("Test2", 2));
   }
@@ -512,10 +509,7 @@ public final class StoreProviderTest {
           @Override public boolean shouldRemove(TestData value) {
             return value.integer == 1 && !value.string.contains("1");
           }
-        })
-        .timeout(1, SECONDS)
-        .toBlocking()
-        .value();
+        }).timeout(1, SECONDS).toBlocking().value();
 
     assertThat(modifiedList).isEqualTo(list);
   }
