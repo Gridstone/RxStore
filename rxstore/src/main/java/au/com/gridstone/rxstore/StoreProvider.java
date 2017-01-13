@@ -620,8 +620,8 @@ public final class StoreProvider {
      */
     @NotNull public Single<List<T>> observeRemoveFromList(@NotNull final T value) {
       return observeRemoveFromList(new RemovePredicateFunc<T>() {
-        @Override public boolean shouldRemove(T anotherValue) {
-          return value.equals(anotherValue);
+        @Override public boolean shouldRemove(T valueToRemove) {
+          return value.equals(valueToRemove);
         }
       });
     }
