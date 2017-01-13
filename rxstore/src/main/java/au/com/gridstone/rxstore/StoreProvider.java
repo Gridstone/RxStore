@@ -743,6 +743,7 @@ public final class StoreProvider {
                 for (int i = 0; i < originalList.size(); i++) {
                   if (predicateFunc.shouldReplace(originalList.get(i))) {
                     indexOfItemToReplace = i;
+                    break;
                   }
                 }
 
