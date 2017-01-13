@@ -417,6 +417,22 @@ public final class StoreProviderTest {
     assertThat(modifiedList).containsExactly(value);
   }
 
+  @Test public void observeReplaceInListProducesItem() {
+    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
+    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
+    store.put(list);
+
+    List<TestData> modifiedList = store.observeReplace(new TestData("Test3", 3),
+        new StoreProvider.ReplacePredicateFunc<TestData>() {
+          @Override public boolean shouldReplace(TestData value) {
+            return value.integer == 2;
+          }
+        }).timeout(1, SECONDS).toBlocking().value();
+
+    assertThat(modifiedList).containsExactly(new TestData("Test1", 1),
+        new TestData("Test3", 3));
+  }
+
   @Test public void observeAddOrReplace_itemAdded() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));

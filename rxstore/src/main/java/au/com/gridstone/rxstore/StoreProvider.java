@@ -755,6 +755,7 @@ public final class StoreProvider {
                 }
 
                 converter.write(modifiedList, type, file);
+                subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
             });
