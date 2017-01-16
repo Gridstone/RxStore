@@ -1,5 +1,10 @@
 Change Log
 ==========
+Version 5.1.0 *(2017-01-16)*
+* Add `removeFromList()` variant that takes a predicate function.
+* Add `addOrReplace()` method.
+* Fix `observeReplace` not producting an item.
+
 Version 5.0.5 *(2017-01-13)*
 * Fix write lock being unlocked when it shouldn't.
 
