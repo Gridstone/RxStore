@@ -729,7 +729,7 @@ public final class StoreProvider {
     @NotNull public Single<List<T>> observeReplace(@NotNull final T value,
         @NotNull final ReplacePredicateFunc<T> predicateFunc) {
       return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
@@ -783,7 +783,7 @@ public final class StoreProvider {
     @NotNull public Single<List<T>> observeAddOrReplace(@NotNull final T value,
         @NotNull final ReplacePredicateFunc<T> predicateFunc) {
       return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
