@@ -480,21 +480,6 @@ public final class StoreProviderTest {
     assertThat(modifiedList).containsExactly(new TestData("Test2", 2));
   }
 
-  @Test public void observeRemoveFromListByIndexProducesItem() {
-    ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
-    List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
-
-    store.put(list);
-    assertThat(store.getBlocking()).isEqualTo(list);
-
-    List<TestData> modifiedList = store.observeRemoveFromList(0)
-        .timeout(1, SECONDS)
-        .toBlocking()
-        .value();
-
-    assertThat(modifiedList).containsExactly(new TestData("Test2", 2));
-  }
-
   @Test public void observeRemoveFromListWithPredicate_oneItemRemoved() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
