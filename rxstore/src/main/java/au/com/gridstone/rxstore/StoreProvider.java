@@ -706,6 +706,7 @@ public final class StoreProvider {
                 modifiedList.remove(position);
 
                 converter.write(modifiedList, type, file);
+                subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
             });
