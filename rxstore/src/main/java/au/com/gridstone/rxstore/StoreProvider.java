@@ -693,7 +693,7 @@ public final class StoreProvider {
      */
     @NotNull public Single<List<T>> observeRemoveFromList(final int position) {
       return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(SingleSubscriber<? super List<T>> subscriber) {
+        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
@@ -706,6 +706,7 @@ public final class StoreProvider {
                 modifiedList.remove(position);
 
                 converter.write(modifiedList, type, file);
+                subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
             });
