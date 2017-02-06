@@ -1,9 +1,12 @@
 Change Log
 ==========
+Version 5.1.1 *(2017-02-06)*
+* Fix `observeRemoveFromList()` missing `onSuccess` call.
+
 Version 5.1.0 *(2017-01-16)*
 * Add `removeFromList()` variant that takes a predicate function.
 * Add `addOrReplace()` method.
-* Fix `observeReplace` not producting an item.
+* Fix `observeReplace` not producing an item.
 
 Version 5.0.5 *(2017-01-13)*
 * Fix write lock being unlocked when it shouldn't.
@@ -28,7 +31,7 @@ Version 5.0.0 *(2016-05-17)*
 * Add `MoshiConverter`
 
 Version 4.0.0 *(2015-09-22)*
-* Project renamed to G-Rex to RxStore
+* Project renamed from G-Rex to RxStore
   * No more separate artifact for Android (it's now an optional dependency of RxStore)
 * Builders instead of public constructors for `RxStore` (previously known as `GRexPersister`)
 
