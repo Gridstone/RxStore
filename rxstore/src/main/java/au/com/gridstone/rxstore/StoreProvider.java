@@ -17,6 +17,7 @@
 package au.com.gridstone.rxstore;
 
 import android.content.Context;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
@@ -27,16 +28,14 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import au.com.gridstone.rxstore.events.*;
+import io.reactivex.*;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.processors.PublishProcessor;
+import io.reactivex.schedulers.Schedulers;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import rx.Observable;
-import rx.Observer;
-import rx.Scheduler;
-import rx.Single;
-import rx.SingleSubscriber;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
-import rx.subjects.PublishSubject;
 
 /**
  * Facilitates the read and write of objects to and from disk using RxJava, and observing
@@ -109,7 +108,8 @@ public final class StoreProvider {
     return new ValueStore<T>(getFileForStore(key), converter, type, scheduler);
   }
 
-  @NotNull public <T> ListStore<T> listStore(@NotNull String key, @NotNull Type type) {
+  @NotNull
+  public <T> ListStore<T> listStore(@NotNull String key, @NotNull Type type) {
     return new ListStore<T>(getFileForStore(key), converter, new ListType(type), scheduler);
   }
 
@@ -121,7 +121,8 @@ public final class StoreProvider {
    * {@link AndroidBuilder#inDir(String) inDir()} before {@link AndroidBuilder#using(Converter)
    * using()}.
    */
-  @NotNull public static AndroidBuilder withContext(@NotNull Context context) {
+  @NotNull
+  public static AndroidBuilder withContext(@NotNull Context context) {
     return new AndroidBuilder(context);
   }
 
@@ -129,7 +130,8 @@ public final class StoreProvider {
    * Start creating a {@link StoreProvider} that will utilise the specified directory
    * for storage.
    */
-  @NotNull public static Builder with(@NotNull File directory) {
+  @NotNull
+  public static Builder with(@NotNull File directory) {
     return new Builder(directory);
   }
 
@@ -149,10 +151,11 @@ public final class StoreProvider {
     /**
      * By default, a StoreProvider will instantiate all stores with a single thread executor
      * {@link Scheduler} to ensure items get written and read in order. If you would like to
-     * override this behaviour (such as for testing with {@link Schedulers#immediate()}), then
+     * override this behaviour (such as for testing with {@link Schedulers#trampoline()}), then
      * you can specify a custom Scheduler here.
      */
-    @NotNull public Builder schedulingWith(@NotNull Scheduler scheduler) {
+    @NotNull
+    public Builder schedulingWith(@NotNull Scheduler scheduler) {
       assertNotNull(scheduler, "scheduler");
       this.scheduler = scheduler;
       return this;
@@ -164,7 +167,9 @@ public final class StoreProvider {
      * <p>
      * This will also finish initializing this StoreProvider instance.
      */
-    public @NotNull StoreProvider using(@NotNull Converter converter) {
+    public
+    @NotNull
+    StoreProvider using(@NotNull Converter converter) {
       assertNotNull(converter, "converter");
       if (scheduler == null) scheduler = Schedulers.from(Executors.newSingleThreadExecutor());
       return new StoreProvider(directory, converter, scheduler);
@@ -188,7 +193,7 @@ public final class StoreProvider {
     /**
      * By default, a StoreProvider will instantiate all stores with a single thread executor
      * {@link Scheduler} to ensure items get written and read in order. If you would like to
-     * override this behaviour (such as for testing with {@link Schedulers#immediate()}), then
+     * override this behaviour (such as for testing with {@link Schedulers#trampoline()}), then
      * you can specify a custom Scheduler here.
      */
     @NotNull public AndroidBuilder schedulingWith(@NotNull Scheduler scheduler) {
@@ -226,7 +231,7 @@ public final class StoreProvider {
    */
   public static final class ValueStore<T> {
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final PublishSubject<T> updateSubject = PublishSubject.create();
+    private final PublishProcessor<StoreEvent> updateSubject = PublishProcessor.create();
 
     private final File file;
     private final Converter converter;
@@ -247,21 +252,24 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<T> observePut(@NotNull final T value) {
-      return Single.create(new Single.OnSubscribe<T>() {
-        @Override public void call(final SingleSubscriber<? super T> subscriber) {
+    @NotNull
+    public Single<T> observePut(@NotNull final T value) {
+      return Single.create(new SingleOnSubscribe<T>() {
+        @Override
+        public void subscribe(final SingleEmitter<T> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 converter.write(value, type, file);
-                subscriber.onSuccess(value);
-                updateSubject.onNext(value);
+                emitter.onSuccess(value);
+                updateSubject.onNext(StoreEvent.createItemPutEvent(value));
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -286,21 +294,29 @@ public final class StoreProvider {
      * <p>
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
+     *
+     * @throws ItemNotFoundException if there is no item in this store
      */
     @NotNull public Single<T> get() {
-      return Single.create(new Single.OnSubscribe<T>() {
-        @Override public void call(final SingleSubscriber<? super T> subscriber) {
+      return Single.create(new SingleOnSubscribe<T>() {
+        @Override
+        public void subscribe(final SingleEmitter<T> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has been deleted!");
 
             runInReadLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 T value = converter.read(file, type);
-                subscriber.onSuccess(value);
+                if (value == null) {
+                  throw new ItemNotFoundException();
+                }
+
+                emitter.onSuccess(value);
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -310,24 +326,25 @@ public final class StoreProvider {
      * Synchronously get the value associated with this store, or null if this
      * store has no current value.
      */
-    @Nullable public T getBlocking() {
-      return get().toBlocking().value();
+    @Nullable
+    public T getBlocking() {
+      return get().blockingGet();
     }
 
     /**
-     * Observe changes to the value in this store. {@code onNext(value)} will be called immediately
-     * with the current value upon subscription.
+     * Observe changes to the value in this store.
      * <p>
-     * {@code onCompleted()} will only ever be called if this store has {@link #delete()} called
+     * {@code onComplete()} will only ever be called if this store has {@link #delete()} called
      * upon it.
      * <p>
      * The {@link Scheduler} used for this observable will be the one specified in
-     * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
+     * {@link Builder#schedulingWith(Scheduler)}.
      */
-    @NotNull public Observable<T> asObservable() {
-      return updateSubject.asObservable()
-          .startWith(get().toObservable())
+    @NotNull
+    public Observable<StoreEvent> asObservable() {
+      return updateSubject
           .onBackpressureLatest()
+          .toObservable()
           .subscribeOn(scheduler);
     }
 
@@ -337,21 +354,24 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<T> observeClear() {
-      return Single.create(new Single.OnSubscribe<T>() {
-        @Override public void call(final SingleSubscriber<? super T> subscriber) {
+    @NotNull
+    public Single<Object> observeClear() {
+      return Single.create(new SingleOnSubscribe<Object>() {
+        @Override
+        public void subscribe(final SingleEmitter<Object> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 converter.write(null, type, file);
-                subscriber.onSuccess(null);
-                updateSubject.onNext(null);
+                emitter.onSuccess(1);
+                updateSubject.onNext(StoreEvent.createStoreClearedEvent());
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -370,7 +390,7 @@ public final class StoreProvider {
      * observe the operation.
      * <p>
      * Once this operation completes, this store object will no longer be usable. Any
-     * observers subscribed to {@link #asObservable()} will receive {@code onCompleted()}.
+     * observers subscribed to {@link #asObservable()} will receive {@code onComplete()}.
      * <p>
      * Any subsequent calls to {@link #get()}, {@link #put(Object) put()}, or
      * {@link #clear()} will throw an {@link IOException}.
@@ -381,25 +401,28 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<T> observeDelete() {
-      return Single.create(new Single.OnSubscribe<T>() {
-        @Override public void call(final SingleSubscriber<? super T> subscriber) {
+    @NotNull
+    public Single<Object> observeDelete() {
+      return Single.create(new SingleOnSubscribe<Object>() {
+        @Override
+        public void subscribe(final SingleEmitter<Object> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 if (file.delete()) {
-                  subscriber.onSuccess(null);
-                  updateSubject.onNext(null);
-                  updateSubject.onCompleted();
+                  emitter.onSuccess(1);
+                  updateSubject.onNext(StoreEvent.createStoreDeletedEvent());
+                  updateSubject.onComplete();
                 } else {
-                  subscriber.onError(new IOException("Delete operation on store failed!"));
+                  emitter.onError(new IOException("Delete operation on store failed!"));
                 }
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -409,7 +432,7 @@ public final class StoreProvider {
      * Delete the file associated with this store and render it completely unusable.
      * <p>
      * Once this operation completes, this store object will no longer be usable. Any
-     * observers subscribed to {@link #asObservable()} will receive {@code onCompleted()}.
+     * observers subscribed to {@link #asObservable()} will receive {@code onComplete()}.
      * <p>
      * Any subsequent calls to {@link #get()}, {@link #put(Object) put()}, or
      * {@link #clear()} will throw an {@link IOException}.
@@ -427,7 +450,7 @@ public final class StoreProvider {
    */
   public final class ListStore<T> {
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final PublishSubject<List<T>> updateSubject = PublishSubject.create();
+    private final PublishProcessor<ListStoreEvent> updateSubject = PublishProcessor.create();
 
     private final File file;
     private final Converter converter;
@@ -448,21 +471,24 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observePut(@NotNull final List<T> value) {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+    @NotNull
+    public Single<List<T>> observePut(@NotNull final List<T> value) {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 converter.write(value, type, file);
-                subscriber.onSuccess(value);
-                updateSubject.onNext(value);
+                emitter.onSuccess(value);
+                updateSubject.onNext(ListStoreEvent.createListPutEvent(value));
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -488,21 +514,24 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> get() {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+    @NotNull
+    public Single<List<T>> get() {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has been deleted!");
 
             runInReadLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 List<T> value = converter.read(file, type);
                 if (value == null) value = Collections.emptyList();
-                subscriber.onSuccess(value);
+                emitter.onSuccess(value);
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -512,24 +541,26 @@ public final class StoreProvider {
      * Synchronously get the list associated with this store, or an immutable empty
      * {@code List} if this store has no items.
      */
-    @NotNull public List<T> getBlocking() {
-      return get().toBlocking().value();
+    @NotNull
+    public List<T> getBlocking() {
+      return get().blockingGet();
     }
 
     /**
-     * Observe changes to the list in this store. {@code onNext(value)} will be called immediately
+     * Observe changes to the list in this store. {@code onNext(value)} will be called trampolinely
      * with the current list upon subscription.
      * <p>
-     * {@code onCompleted()} will only ever be called if this store has {@link #delete()} called
+     * {@code onComplete()} will only ever be called if this store has {@link #delete()} called
      * upon it.
      * <p>
      * The {@link Scheduler} used for this observable will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Observable<List<T>> asObservable() {
-      return updateSubject.asObservable()
-          .startWith(get().toObservable())
+    @NotNull
+    public Observable<ListStoreEvent> asObservable() {
+      return updateSubject
           .onBackpressureLatest()
+          .toObservable()
           .subscribeOn(scheduler);
     }
 
@@ -539,22 +570,25 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeClear() {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+    @NotNull
+    public Single<List<T>> observeClear() {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 List<T> emptyList = Collections.emptyList();
                 converter.write(emptyList, type, file);
-                subscriber.onSuccess(emptyList);
-                updateSubject.onNext(emptyList);
+                emitter.onSuccess(emptyList);
+                updateSubject.onNext(ListStoreEvent.createStoreClearedEvent());
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -576,14 +610,17 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeAddToList(@NotNull final T value) {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+    @NotNull
+    public Single<List<T>> observeAddToList(@NotNull final T value) {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 List<T> originalList = converter.read(file, type);
                 if (originalList == null) originalList = Collections.emptyList();
 
@@ -592,12 +629,12 @@ public final class StoreProvider {
                 result.add(value);
 
                 converter.write(result, type, file);
-                subscriber.onSuccess(result);
-                updateSubject.onNext(result);
+                emitter.onSuccess(result);
+                updateSubject.onNext(ListStoreEvent.createItemAddedEvent(result));
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -618,9 +655,11 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeRemoveFromList(@NotNull final T value) {
+    @NotNull
+    public Single<List<T>> observeRemoveFromList(@NotNull final T value) {
       return observeRemoveFromList(new RemovePredicateFunc<T>() {
-        @Override public boolean shouldRemove(T valueToRemove) {
+        @Override
+        public boolean shouldRemove(T valueToRemove) {
           return value.equals(valueToRemove);
         }
       });
@@ -640,14 +679,18 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeRemoveFromList(@NotNull final RemovePredicateFunc<T> predicateFunc) {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+    @NotNull
+    public Single<List<T>> observeRemoveFromList(
+        @NotNull final RemovePredicateFunc<T> predicateFunc) {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 List<T> originalList = converter.read(file, type);
                 if (originalList == null) originalList = Collections.emptyList();
 
@@ -667,12 +710,12 @@ public final class StoreProvider {
                 }
 
                 converter.write(modifiedList, type, file);
-                subscriber.onSuccess(modifiedList);
-                updateSubject.onNext(modifiedList);
+                emitter.onSuccess(modifiedList);
+                updateSubject.onNext(ListStoreEvent.createItemRemovedEvent(modifiedList));
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -691,14 +734,17 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeRemoveFromList(final int position) {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+    @NotNull
+    public Single<List<T>> observeRemoveFromList(final int position) {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 List<T> originalList = converter.read(file, type);
                 if (originalList == null) originalList = Collections.emptyList();
 
@@ -706,12 +752,12 @@ public final class StoreProvider {
                 modifiedList.remove(position);
 
                 converter.write(modifiedList, type, file);
-                subscriber.onSuccess(modifiedList);
-                updateSubject.onNext(modifiedList);
+                emitter.onSuccess(modifiedList);
+                updateSubject.onNext(ListStoreEvent.createItemRemovedEvent(modifiedList));
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -727,15 +773,18 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeReplace(@NotNull final T value,
+    @NotNull
+    public Single<List<T>> observeReplace(@NotNull final T value,
         @NotNull final ReplacePredicateFunc<T> predicateFunc) {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 List<T> originalList = converter.read(file, type);
                 if (originalList == null) originalList = Collections.emptyList();
 
@@ -756,12 +805,12 @@ public final class StoreProvider {
                 }
 
                 converter.write(modifiedList, type, file);
-                subscriber.onSuccess(modifiedList);
-                updateSubject.onNext(modifiedList);
+                emitter.onSuccess(modifiedList);
+                updateSubject.onNext(ListStoreEvent.createItemReplacedEvent(modifiedList));
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -781,15 +830,18 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeAddOrReplace(@NotNull final T value,
+    @NotNull
+    public Single<List<T>> observeAddOrReplace(@NotNull final T value,
         @NotNull final ReplacePredicateFunc<T> predicateFunc) {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 List<T> originalList = converter.read(file, type);
                 if (originalList == null) originalList = Collections.emptyList();
 
@@ -803,7 +855,7 @@ public final class StoreProvider {
                 }
 
                 int modifiedListSize = indexOfItemToReplace == -1 ? originalList.size() + 1 :
-                                        originalList.size();
+                    originalList.size();
 
                 List<T> modifiedList = new ArrayList<T>(modifiedListSize);
                 modifiedList.addAll(originalList);
@@ -816,12 +868,16 @@ public final class StoreProvider {
                 }
 
                 converter.write(modifiedList, type, file);
-                subscriber.onSuccess(modifiedList);
-                updateSubject.onNext(modifiedList);
+                emitter.onSuccess(modifiedList);
+                if (indexOfItemToReplace == -1) {
+                  updateSubject.onNext(ListStoreEvent.createItemAddedEvent(modifiedList));
+                } else {
+                  updateSubject.onNext(ListStoreEvent.createItemReplacedEvent(modifiedList));
+                }
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -840,7 +896,7 @@ public final class StoreProvider {
      * observe the operation.
      * <p>
      * Once this operation completes, this store object will no longer be usable. Any
-     * observers subscribed to {@link #asObservable()} will receive {@code onCompleted()}.
+     * observers subscribed to {@link #asObservable()} will receive {@code onComplete()}.
      * <p>
      * Any subsequent calls to {@link #get()}, {@link #put(List) put()}, or
      * {@link #clear()} will throw an {@link IOException}.
@@ -851,26 +907,29 @@ public final class StoreProvider {
      * The {@link Scheduler} used for this operation will be the one specified in
      * {@link Builder#schedulingWith(Scheduler) schedulingWith()}.
      */
-    @NotNull public Single<List<T>> observeDelete() {
-      return Single.create(new Single.OnSubscribe<List<T>>() {
-        @Override public void call(final SingleSubscriber<? super List<T>> subscriber) {
+    @NotNull
+    public Single<List<T>> observeDelete() {
+      return Single.create(new SingleOnSubscribe<List<T>>() {
+        @Override
+        public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
           try {
             if (!file.exists()) throw new IOException("This store has already been deleted!");
 
             runInWriteLock(readWriteLock, new Runnable() {
-              @Override public void run() {
+              @Override
+              public void run() {
                 if (file.delete()) {
                   List<T> emptyList = Collections.emptyList();
-                  subscriber.onSuccess(emptyList);
-                  updateSubject.onNext(emptyList);
-                  updateSubject.onCompleted();
+                  emitter.onSuccess(emptyList);
+                  updateSubject.onNext(ListStoreEvent.createStoreDeletedEvent());
+                  updateSubject.onComplete();
                 } else {
-                  subscriber.onError(new IOException("Delete operation on list store failed!"));
+                  emitter.onError(new IOException("Delete operation on list store failed!"));
                 }
               }
             });
           } catch (Exception e) {
-            subscriber.onError(e);
+            emitter.onError(e);
           }
         }
       }).subscribeOn(scheduler);
@@ -881,7 +940,7 @@ public final class StoreProvider {
      * observe the operation.
      * <p>
      * Once this operation completes, this store object will no longer be usable. Any
-     * observers subscribed to {@link #asObservable()} will receive {@code onCompleted()}.
+     * observers subscribed to {@link #asObservable()} will receive {@code onComplete()}.
      * <p>
      * Any subsequent calls to {@link #get()}, {@link #put(List) put()}, or
      * {@link #clear()} will throw an {@link IOException}.
@@ -902,15 +961,20 @@ public final class StoreProvider {
     boolean shouldRemove(T value);
   }
 
-  private static Observer<Object> errorThrowingObserver = new Observer<Object>() {
-    @Override public void onCompleted() {
+  private static SingleObserver<Object> errorThrowingObserver = new SingleObserver<Object>() {
+    @Override
+    public void onSubscribe(Disposable d) {
+
     }
 
-    @Override public void onError(Throwable e) {
+    @Override
+    public void onSuccess(Object o) {
+
+    }
+
+    @Override
+    public void onError(Throwable e) {
       throw new RuntimeException(e);
-    }
-
-    @Override public void onNext(Object o) {
     }
   };
 
@@ -927,15 +991,18 @@ public final class StoreProvider {
       this.wrappedType = wrappedType;
     }
 
-    @Override public Type[] getActualTypeArguments() {
-      return new Type[] { wrappedType };
+    @Override
+    public Type[] getActualTypeArguments() {
+      return new Type[] {wrappedType};
     }
 
-    @Override public Type getOwnerType() {
+    @Override
+    public Type getOwnerType() {
       return null;
     }
 
-    @Override public Type getRawType() {
+    @Override
+    public Type getRawType() {
       return List.class;
     }
   }

@@ -1,22 +1,28 @@
 package au.com.gridstone.rxstore.testutil;
 
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
+
 import java.util.NoSuchElementException;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import rx.Observer;
 
 import static com.google.common.truth.Truth.assertThat;
 
 public final class RecordingObserver<T> implements Observer<T> {
   private final BlockingDeque<Object> events = new LinkedBlockingDeque<Object>();
 
-  @Override public void onCompleted() {
-    events.addLast(new OnCompleted());
+  @Override public void onComplete() {
+    events.addLast(new OnComplete());
   }
 
   @Override public void onError(Throwable e) {
     events.addLast(new OnError(e));
+  }
+
+  @Override public void onSubscribe(Disposable d) {
+    events.addLast(new OnSubscribe());
   }
 
   @Override public void onNext(T t) {
@@ -38,6 +44,11 @@ public final class RecordingObserver<T> implements Observer<T> {
     return wanted.cast(event);
   }
 
+  public OnSubscribe takeSubscribe() {
+    OnSubscribe event = takeEvent(OnSubscribe.class);
+    return event;
+  }
+
   public T takeNext() {
     OnNext event = takeEvent(OnNext.class);
     return event.value;
@@ -48,7 +59,7 @@ public final class RecordingObserver<T> implements Observer<T> {
   }
 
   public void assertOnCompleted() {
-    takeEvent(OnCompleted.class);
+    takeEvent(OnComplete.class);
   }
 
   public void assertNoMoreEvents() {
@@ -71,9 +82,15 @@ public final class RecordingObserver<T> implements Observer<T> {
     }
   }
 
-  private final class OnCompleted {
+  private final class OnComplete {
     @Override public String toString() {
-      return "OnCompleted";
+      return "OnComplete";
+    }
+  }
+
+  private final class OnSubscribe {
+    @Override public String toString() {
+      return "OnSubscribe";
     }
   }
 
