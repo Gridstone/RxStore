@@ -18,7 +18,10 @@ package au.com.gridstone.rxstore;
 
 import au.com.gridstone.rxstore.StoreProvider.ValueStore;
 import au.com.gridstone.rxstore.StoreProvider.ListStore;
+import au.com.gridstone.rxstore.events.ListStoreEvent;
+import au.com.gridstone.rxstore.events.StoreEvent;
 import au.com.gridstone.rxstore.testutil.RecordingObserver;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -30,13 +33,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import io.reactivex.Notification;
+import io.reactivex.annotations.NonNull;
+import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
+import io.reactivex.schedulers.Schedulers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import rx.Notification;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -48,23 +54,25 @@ public final class StoreProviderTest {
 
   @Before public void setup() throws IOException {
     storeProvider = StoreProvider.with(tempDir.newFolder("rxStoreTest"))
-        .schedulingWith(Schedulers.immediate())
+        .schedulingWith(Schedulers.trampoline())
         .using(new TestConverter());
   }
 
-  @Test public void putAndClear() {
+  @Test(expected = ItemNotFoundException.class)
+  public void putAndClear() {
     ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
     TestData value = new TestData("Test", 1);
     store.put(value);
     assertThat(store.getBlocking()).isEqualTo(value);
 
     store.clear();
-    assertThat(store.getBlocking()).isNull();
+    store.getBlocking();
   }
 
-  @Test public void getOnEmptyReturnsNull() {
+  @Test(expected = ItemNotFoundException.class)
+  public void getOnEmptyThrowsException() {
     ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
-    assertThat(store.getBlocking()).isNull();
+    store.getBlocking();
   }
 
   @Test public void interactionsWithDeletedFail() {
@@ -78,79 +86,88 @@ public final class StoreProviderTest {
     Throwable getError = store.get()
         .toObservable()
         .materialize()
-        .filter(new Func1<Notification<TestData>, Boolean>() {
-          @Override public Boolean call(Notification<TestData> notification) {
+        .filter(new Predicate<Notification<TestData>>() {
+          @Override public boolean test(@NonNull Notification<TestData> notification)
+              throws Exception {
             return notification.isOnError();
           }
         })
-        .map(new Func1<Notification<TestData>, Throwable>() {
-          @Override public Throwable call(Notification<TestData> notification) {
-            return notification.getThrowable();
+        .map(new Function<Notification<TestData>, Throwable>() {
+          @Override
+          public Throwable apply(@NonNull Notification<TestData> notification) throws Exception {
+            return notification.getError();
           }
         })
-        .toBlocking()
-        .single();
+        .blockingSingle();
 
     assertThat(getError).hasMessage(expectedMessage);
 
     Throwable putError = store.observePut(new TestData("Test2", 2))
         .toObservable()
         .materialize()
-        .filter(new Func1<Notification<TestData>, Boolean>() {
-          @Override public Boolean call(Notification<TestData> notification) {
+        .filter(new Predicate<Notification<TestData>>() {
+          @Override public boolean test(@NonNull Notification<TestData> notification)
+              throws Exception {
             return notification.isOnError();
           }
         })
-        .map(new Func1<Notification<TestData>, Throwable>() {
-          @Override public Throwable call(Notification<TestData> notification) {
-            return notification.getThrowable();
+        .map(new Function<Notification<TestData>, Throwable>() {
+          @Override
+          public Throwable apply(@NonNull Notification<TestData> notification) throws Exception {
+            return notification.getError();
           }
         })
-        .toBlocking()
-        .single();
+        .blockingSingle();
 
     assertThat(putError).hasMessage(expectedMessage);
 
     Throwable clearError = store.observeClear()
         .toObservable()
         .materialize()
-        .filter(new Func1<Notification<TestData>, Boolean>() {
-          @Override public Boolean call(Notification<TestData> notification) {
+        .filter(new Predicate<Notification<Object>>() {
+          @Override public boolean test(@NonNull Notification<Object> notification)
+              throws Exception {
             return notification.isOnError();
           }
         })
-        .map(new Func1<Notification<TestData>, Throwable>() {
-          @Override public Throwable call(Notification<TestData> notification) {
-            return notification.getThrowable();
+        .map(new Function<Notification<Object>, Throwable>() {
+          @Override
+          public Throwable apply(@NonNull Notification<Object> notification) throws Exception {
+            return notification.getError();
           }
         })
-        .toBlocking()
-        .single();
+        .blockingSingle();
 
     assertThat(clearError).hasMessage(expectedMessage);
   }
 
   @Test public void updatesTriggerObservable() {
     ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
-    RecordingObserver<TestData> observer = new RecordingObserver<TestData>();
+    RecordingObserver<StoreEvent> observer = new RecordingObserver<StoreEvent>();
     TestData value = new TestData("Test", 1);
 
     store.asObservable().subscribe(observer);
+    observer.takeSubscribe();
 
-    assertThat(observer.takeNext()).isNull();
     store.put(value);
-    assertThat(observer.takeNext()).isEqualTo(value);
+    StoreEvent event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(StoreEvent.Type.ITEM_PUT);
+    assertThat(event.getItem()).isEqualTo(value);
 
     TestData value2 = new TestData("Test2", 2);
     store.put(value2);
-    assertThat(observer.takeNext()).isEqualTo(value2);
+    event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(StoreEvent.Type.ITEM_PUT);
+    assertThat(event.getItem()).isEqualTo(value2);
 
     store.clear();
-    assertThat(observer.takeNext()).isNull();
+    event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(StoreEvent.Type.STORE_CLEARED);
 
     observer.assertNoMoreEvents();
     store.delete();
-    assertThat(observer.takeNext()).isNull();
+    event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(StoreEvent.Type.STORE_DELETED);
     observer.assertOnCompleted();
   }
 
@@ -158,19 +175,19 @@ public final class StoreProviderTest {
     TestData value = new TestData("Test", 1);
     ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
 
-    TestData updatedValue = store.observePut(value).timeout(1, SECONDS).toBlocking().value();
+    TestData updatedValue = store.observePut(value).timeout(1, SECONDS).blockingGet();
     assertThat(updatedValue).isEqualTo(value);
   }
 
-  @Test public void observeClearProducesItem() {
+  @Test public void observeClearProducesResult() {
     TestData value = new TestData("Test", 1);
     ValueStore<TestData> store = storeProvider.valueStore("testValue", TestData.class);
 
     store.put(value);
     assertThat(store.getBlocking()).isEqualTo(value);
 
-    TestData updatedValue = store.observeClear().timeout(1, SECONDS).toBlocking().value();
-    assertThat(updatedValue).isNull();
+    Object ignore = store.observeClear().timeout(1, SECONDS).blockingGet();
+    assertThat(ignore).isNotNull();
   }
 
   @Test public void observeDeleteProducesItem() {
@@ -180,8 +197,8 @@ public final class StoreProviderTest {
     store.put(value);
     assertThat(store.getBlocking()).isEqualTo(value);
 
-    TestData updatedValue = store.observeDelete().timeout(1, SECONDS).toBlocking().value();
-    assertThat(updatedValue).isNull();
+    Object ignore = store.observeDelete().timeout(1, SECONDS).blockingGet();
+    assertThat(ignore).isNotNull();
   }
 
   @Test public void putAndClearList() {
@@ -287,11 +304,12 @@ public final class StoreProviderTest {
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
     store.put(list);
 
-    store.addOrReplace(new TestData("Test3", 3), new StoreProvider.ReplacePredicateFunc<TestData>() {
-      @Override public boolean shouldReplace(TestData value) {
-        return value.integer == 3;
-      }
-    });
+    store.addOrReplace(new TestData("Test3", 3),
+        new StoreProvider.ReplacePredicateFunc<TestData>() {
+          @Override public boolean shouldReplace(TestData value) {
+            return value.integer == 3;
+          }
+        });
 
     assertThat(store.getBlocking()).containsExactly(new TestData("Test1", 1),
         new TestData("Test2", 2), new TestData("Test3", 3));
@@ -314,27 +332,31 @@ public final class StoreProviderTest {
 
   @Test public void updateToListTriggerObservable() {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
-    RecordingObserver<List<TestData>> observer = new RecordingObserver<List<TestData>>();
+    RecordingObserver<ListStoreEvent> observer = new RecordingObserver<ListStoreEvent>();
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
-
     store.asObservable().subscribe(observer);
+    observer.takeSubscribe();
 
-    assertThat(observer.takeNext()).isEmpty();
     store.put(list);
-    assertThat(observer.takeNext()).isEqualTo(list);
+    ListStoreEvent event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(ListStoreEvent.Type.LIST_PUT);
 
     TestData newValue = new TestData("Test3", 3);
     store.addToList(newValue);
     List<TestData> expectedList = new ArrayList<TestData>(list);
     expectedList.add(newValue);
-    assertThat(observer.takeNext()).isEqualTo(expectedList);
+    event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(ListStoreEvent.Type.ITEM_ADDED);
+    assertThat(event.getList()).isEqualTo(expectedList);
 
     store.clear();
-    assertThat(observer.takeNext()).isEmpty();
+    event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(ListStoreEvent.Type.STORE_CLEARED);
 
     observer.assertNoMoreEvents();
     store.delete();
-    assertThat(observer.takeNext()).isEmpty();
+    event = observer.takeNext();
+    assertThat(event.getType()).isEqualTo(ListStoreEvent.Type.STORE_DELETED);
     observer.assertOnCompleted();
   }
 
@@ -349,54 +371,60 @@ public final class StoreProviderTest {
     Throwable getError = store.get()
         .toObservable()
         .materialize()
-        .filter(new Func1<Notification<List<TestData>>, Boolean>() {
-          @Override public Boolean call(Notification<List<TestData>> notification) {
+        .filter(new Predicate<Notification<List<TestData>>>() {
+          @Override public boolean test(@NonNull Notification<List<TestData>> notification)
+              throws Exception {
             return notification.isOnError();
           }
         })
-        .map(new Func1<Notification<List<TestData>>, Throwable>() {
-          @Override public Throwable call(Notification<List<TestData>> notification) {
-            return notification.getThrowable();
+        .map(new Function<Notification<List<TestData>>, Throwable>() {
+          @Override
+          public Throwable apply(@NonNull Notification<List<TestData>> notification)
+              throws Exception {
+            return notification.getError();
           }
         })
-        .toBlocking()
-        .single();
+        .blockingSingle();
 
     assertThat(getError).hasMessage(expectedMessage);
 
     Throwable putError = store.observePut(Collections.singletonList(new TestData("Test3", 3)))
         .toObservable()
         .materialize()
-        .filter(new Func1<Notification<List<TestData>>, Boolean>() {
-          @Override public Boolean call(Notification<List<TestData>> notification) {
+        .filter(new Predicate<Notification<List<TestData>>>() {
+          @Override public boolean test(@NonNull Notification<List<TestData>> notification)
+              throws Exception {
             return notification.isOnError();
           }
         })
-        .map(new Func1<Notification<List<TestData>>, Throwable>() {
-          @Override public Throwable call(Notification<List<TestData>> notification) {
-            return notification.getThrowable();
+        .map(new Function<Notification<List<TestData>>, Throwable>() {
+          @Override
+          public Throwable apply(@NonNull Notification<List<TestData>> notification)
+              throws Exception {
+            return notification.getError();
           }
         })
-        .toBlocking()
-        .single();
+        .blockingSingle();
 
     assertThat(putError).hasMessage(expectedMessage);
 
     Throwable clearError = store.observeClear()
         .toObservable()
         .materialize()
-        .filter(new Func1<Notification<List<TestData>>, Boolean>() {
-          @Override public Boolean call(Notification<List<TestData>> notification) {
+        .filter(new Predicate<Notification<List<TestData>>>() {
+          @Override public boolean test(@NonNull Notification<List<TestData>> notification)
+              throws Exception {
             return notification.isOnError();
           }
         })
-        .map(new Func1<Notification<List<TestData>>, Throwable>() {
-          @Override public Throwable call(Notification<List<TestData>> notification) {
-            return notification.getThrowable();
+        .map(new Function<Notification<List<TestData>>, Throwable>() {
+          @Override
+          public Throwable apply(@NonNull Notification<List<TestData>> notification)
+              throws Exception {
+            return notification.getError();
           }
         })
-        .toBlocking()
-        .single();
+        .blockingSingle();
 
     assertThat(clearError).hasMessage(expectedMessage);
   }
@@ -405,7 +433,7 @@ public final class StoreProviderTest {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
 
-    List<TestData> updatedList = store.observePut(list).timeout(1, SECONDS).toBlocking().value();
+    List<TestData> updatedList = store.observePut(list).timeout(1, SECONDS).blockingGet();
     assertThat(updatedList).isEqualTo(list);
   }
 
@@ -413,7 +441,7 @@ public final class StoreProviderTest {
     ListStore<TestData> store = storeProvider.listStore("testValues", TestData.class);
     TestData value = new TestData("Test1", 1);
 
-    List<TestData> modifiedList = store.observeAddToList(value).timeout(1, SECONDS).toBlocking().value();
+    List<TestData> modifiedList = store.observeAddToList(value).timeout(1, SECONDS).blockingGet();
     assertThat(modifiedList).containsExactly(value);
   }
 
@@ -427,7 +455,7 @@ public final class StoreProviderTest {
           @Override public boolean shouldReplace(TestData value) {
             return value.integer == 2;
           }
-        }).timeout(1, SECONDS).toBlocking().value();
+        }).timeout(1, SECONDS).blockingGet();
 
     assertThat(modifiedList).containsExactly(new TestData("Test1", 1),
         new TestData("Test3", 3));
@@ -443,7 +471,7 @@ public final class StoreProviderTest {
           @Override public boolean shouldReplace(TestData value) {
             return value.integer == 3;
           }
-        }).timeout(1, SECONDS).toBlocking().value();
+        }).timeout(1, SECONDS).blockingGet();
 
     assertThat(modifiedList).containsExactly(new TestData("Test1", 1), new TestData("Test2", 2),
         new TestData("Test3", 3));
@@ -459,7 +487,7 @@ public final class StoreProviderTest {
           @Override public boolean shouldReplace(TestData value) {
             return value.integer == 2;
           }
-        }).timeout(1, SECONDS).toBlocking().value();
+        }).timeout(1, SECONDS).blockingGet();
 
     assertThat(modifiedList).containsExactly(new TestData("Test1", 1),
         new TestData("Test3", 3));
@@ -474,8 +502,7 @@ public final class StoreProviderTest {
 
     List<TestData> modifiedList = store.observeRemoveFromList(new TestData("Test1", 1))
         .timeout(1, SECONDS)
-        .toBlocking()
-        .value();
+        .blockingGet();
 
     assertThat(modifiedList).containsExactly(new TestData("Test2", 2));
   }
@@ -489,8 +516,7 @@ public final class StoreProviderTest {
 
     List<TestData> modifiedList = store.observeRemoveFromList(0)
         .timeout(1, SECONDS)
-        .toBlocking()
-        .value();
+        .blockingGet();
 
     assertThat(modifiedList).containsExactly(new TestData("Test2", 2));
   }
@@ -507,7 +533,7 @@ public final class StoreProviderTest {
           @Override public boolean shouldRemove(TestData value) {
             return value.integer == 1;
           }
-        }).timeout(1, SECONDS).toBlocking().value();
+        }).timeout(1, SECONDS).blockingGet();
 
     assertThat(modifiedList).containsExactly(new TestData("Test2", 2));
   }
@@ -524,7 +550,7 @@ public final class StoreProviderTest {
           @Override public boolean shouldRemove(TestData value) {
             return value.integer == 1 && !value.string.contains("1");
           }
-        }).timeout(1, SECONDS).toBlocking().value();
+        }).timeout(1, SECONDS).blockingGet();
 
     assertThat(modifiedList).isEqualTo(list);
   }
@@ -536,7 +562,7 @@ public final class StoreProviderTest {
     store.put(list);
     assertThat(store.getBlocking()).isEqualTo(list);
 
-    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).blockingGet();
     assertThat(updatedList).isEmpty();
   }
 
@@ -547,7 +573,7 @@ public final class StoreProviderTest {
     store.put(list);
     assertThat(store.getBlocking()).isEqualTo(list);
 
-    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).toBlocking().value();
+    List<TestData> updatedList = store.observeClear().timeout(1, SECONDS).blockingGet();
     assertThat(updatedList).isEmpty();
   }
 
