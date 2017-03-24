@@ -1,7 +1,7 @@
 RxStore
 =====
 
-A tiny library that assists in saving and restoring objects to and from disk using [RxJava](https://github.com/ReactiveX/RxJava), and observing changes over time.
+A tiny library that assists in saving and restoring objects to and from disk using [RxJava2](https://github.com/ReactiveX/RxJava), and observing changes over time.
 
 Details
 -------
@@ -63,7 +63,7 @@ Perhaps you're making use of Square's [Retrofit](http://square.github.io/retrofi
 
 ```java
 webServices.getPerson()
-    .flatMap((person) -> store.put("person", person).toObservable())
+    .flatMap((person) -> store.observePut("person", person).toObservable())
     .subscribe((person) -> {
       // Do something with newly downloaded and persisted person.
     });
@@ -81,7 +81,7 @@ A `ListStore` that has been cleared or not yet given a value will return an immu
 
 ####Observing data
 
-Another handy trick is to observe a store change over time. Calling `store.asObservable()` will give you an rx `Observable`. This `Observable` will immediately deliver the current value of the store on subscription, and will then deliver updated values if changes occur in `onNext()`. `onCompleted()` will only be called if the store is deleted.
+Another handy trick is to observe a store change over time. Calling `store.asObservable()` will give you an rx `Observable`. This `Observable` will immediately deliver deliver updated values if changes occur in `onNext()`. `onCompleted()` will only be called if the store is deleted.
 
 Kotlin
 ------
