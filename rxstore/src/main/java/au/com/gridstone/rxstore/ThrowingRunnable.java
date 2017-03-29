@@ -16,20 +16,6 @@
 
 package au.com.gridstone.rxstore;
 
-import io.reactivex.annotations.NonNull;
-import io.reactivex.annotations.Nullable;
-import java.io.File;
-import java.lang.reflect.Type;
-
-public interface Converter {
-  /**
-   * Convert data into a serializable format and write to writer.
-   */
-  <T> void write(@Nullable T data, @NonNull Type type, @NonNull File file)
-      throws ConverterException;
-
-  /**
-   * Pull typed data out of reader.
-   */
-  @Nullable <T> T read(@NonNull File file, @NonNull Type type) throws ConverterException;
+interface ThrowingRunnable {
+  void run() throws Exception;
 }

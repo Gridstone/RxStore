@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package au.com.gridstone.rxstore;
+package au.com.gridstone.rxstore
 
-import io.reactivex.annotations.NonNull;
-import io.reactivex.annotations.Nullable;
-import java.io.File;
-import java.lang.reflect.Type;
+import java.io.File
 
-public interface Converter {
-  /**
-   * Convert data into a serializable format and write to writer.
-   */
-  <T> void write(@Nullable T data, @NonNull Type type, @NonNull File file)
-      throws ConverterException;
+inline fun <reified T : Any> createValueStore(file: File, converter: Converter): ValueStore<T>
+    = ValueStore(file, converter, T::class.java)
 
-  /**
-   * Pull typed data out of reader.
-   */
-  @Nullable <T> T read(@NonNull File file, @NonNull Type type) throws ConverterException;
-}
+inline fun <reified T : Any> createListStore(file: File, converter: Converter): ListStore<T>
+    = ListStore(file, converter, T::class.java)
