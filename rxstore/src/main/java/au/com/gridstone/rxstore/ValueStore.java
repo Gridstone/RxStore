@@ -17,140 +17,33 @@
 package au.com.gridstone.rxstore;
 
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
-import io.reactivex.CompletableOnSubscribe;
 import io.reactivex.Maybe;
-import io.reactivex.MaybeEmitter;
-import io.reactivex.MaybeOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.SingleOnSubscribe;
 import io.reactivex.annotations.NonNull;
 import io.reactivex.annotations.Nullable;
-import io.reactivex.functions.Function;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static au.com.gridstone.rxstore.Locks.runInReadLock;
-import static au.com.gridstone.rxstore.Locks.runInWriteLock;
-import static au.com.gridstone.rxstore.Preconditions.assertNotNull;
+public interface ValueStore<T> {
+  @NonNull Maybe<T> get();
 
-public final class ValueStore<T> {
-  private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-  private final PublishSubject<ValueUpdate<T>> updateSubject = PublishSubject.create();
+  @Nullable T blockingGet();
 
-  private final File file;
-  private final Converter converter;
-  private final Type type;
+  @NonNull Single<T> observePut(@NonNull final T value);
 
-  public ValueStore(@NonNull File file, @NonNull Converter converter, @NonNull Type type) {
-    assertNotNull(file, "file");
-    assertNotNull(converter, "converter");
-    assertNotNull(type, "type");
-    this.file = file;
-    this.converter = converter;
-    this.type = type;
-  }
+  void put(@NonNull T value);
 
-  @NonNull public Maybe<T> get() {
-    return Maybe.create(new MaybeOnSubscribe<T>() {
-      @Override public void subscribe(final MaybeEmitter<T> emitter) throws Exception {
-        runInReadLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists()) {
-              emitter.onComplete();
-              return;
-            }
+  void put(@NonNull T value, @NonNull Scheduler scheduler);
 
-            T value = converter.read(file, type);
-            if (value == null) emitter.onComplete();
-            emitter.onSuccess(value);
-          }
-        });
-      }
-    });
-  }
+  @NonNull Observable<ValueUpdate<T>> observe();
 
-  @Nullable public T blockingGet() {
-    return get().blockingGet();
-  }
+  @NonNull Completable observeClear();
 
-  @NonNull public Single<T> observePut(@NonNull final T value) {
-    assertNotNull(value, "value");
+  void clear();
 
-    return Single.create(new SingleOnSubscribe<T>() {
-      @Override public void subscribe(final SingleEmitter<T> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create file for store."));
-            }
+  void clear(@NonNull Scheduler scheduler);
 
-            converter.write(value, type, file);
-            emitter.onSuccess(value);
-            updateSubject.onNext(new ValueUpdate<T>(value));
-          }
-        });
-      }
-    });
-  }
-
-  public void put(@NonNull T value) {
-    put(value, Schedulers.io());
-  }
-
-  public void put(@NonNull T value, @NonNull Scheduler scheduler) {
-    assertNotNull(scheduler, "scheduler");
-    observePut(value).subscribeOn(scheduler).subscribe();
-  }
-
-  @NonNull public Observable<ValueUpdate<T>> observe() {
-    Observable<ValueUpdate<T>> startingValue = get()
-        .map(new Function<T, ValueUpdate<T>>() {
-          @Override public ValueUpdate<T> apply(T value) throws Exception {
-            return new ValueUpdate<T>(value);
-          }
-        })
-        .defaultIfEmpty(ValueUpdate.<T>empty())
-        .toObservable();
-
-    return updateSubject.startWith(startingValue);
-  }
-
-  @NonNull public Completable observeClear() {
-    return Completable.create(new CompletableOnSubscribe() {
-      @Override public void subscribe(final CompletableEmitter emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (file.exists() && !file.delete()) {
-              emitter.onError(new IOException("Clear operation on store failed."));
-            } else {
-              emitter.onComplete();
-            }
-
-            updateSubject.onNext(ValueUpdate.<T>empty());
-          }
-        });
-      }
-    });
-  }
-
-  public void clear() {
-    clear(Schedulers.io());
-  }
-
-  public void clear(@NonNull Scheduler scheduler) {
-    assertNotNull(scheduler, "scheduler");
-    observeClear().subscribeOn(scheduler).subscribe();
-  }
-
-  public static final class ValueUpdate<T> {
+  final class ValueUpdate<T> {
     @Nullable public final T value;
     public final boolean empty;
 
@@ -161,7 +54,7 @@ public final class ValueStore<T> {
 
     @Override public boolean equals(Object obj) {
       if (this == obj) return true;
-      if (!(obj instanceof ValueStore.ValueUpdate)) return false;
+      if (!(obj instanceof ValueUpdate)) return false;
 
       ValueUpdate other = (ValueUpdate) obj;
       if (this.empty) return other.empty;

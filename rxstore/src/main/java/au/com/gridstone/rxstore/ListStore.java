@@ -19,388 +19,69 @@ package au.com.gridstone.rxstore;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.SingleOnSubscribe;
 import io.reactivex.annotations.NonNull;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static au.com.gridstone.rxstore.Locks.runInReadLock;
-import static au.com.gridstone.rxstore.Locks.runInWriteLock;
-import static au.com.gridstone.rxstore.Preconditions.assertNotNull;
+public interface ListStore<T> {
+  @NonNull Single<List<T>> get();
 
-public final class ListStore<T> {
-  private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-  private final PublishSubject<List<T>> updateSubject = PublishSubject.create();
+  @NonNull List<T> blockingGet();
 
-  private final File file;
-  private final Converter converter;
-  private final Type type;
+  @NonNull Single<List<T>> observePut(@NonNull final List<T> list);
 
-  public ListStore(@NonNull File file, @NonNull Converter converter, @NonNull Type type) {
-    assertNotNull(file, "file");
-    assertNotNull(converter, "converter");
-    assertNotNull(type, "type");
-    this.file = file;
-    this.converter = converter;
-    this.type = new ListType(type);
-  }
+  void put(@NonNull List<T> list);
 
-  @NonNull public Single<List<T>> get() {
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInReadLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists()) {
-              emitter.onSuccess(Collections.<T>emptyList());
-              return;
-            }
+  void put(@NonNull List<T> list, @NonNull Scheduler scheduler);
 
-            List<T> list = converter.read(file, type);
-            if (list == null) list = Collections.emptyList();
-            emitter.onSuccess(list);
-          }
-        });
-      }
-    });
-  }
+  @NonNull Observable<List<T>> observe();
 
-  @NonNull public List<T> blockingGet() {
-    return get().blockingGet();
-  }
+  @NonNull Single<List<T>> observeClear();
 
-  @NonNull public Single<List<T>> observePut(@NonNull final List<T> list) {
-    assertNotNull(list, "list");
+  void clear();
 
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create file for store."));
-              return;
-            }
+  void clear(@NonNull Scheduler scheduler);
 
-            converter.write(list, type, file);
-            emitter.onSuccess(list);
-            updateSubject.onNext(list);
-          }
-        });
-      }
-    });
-  }
+  @NonNull Single<List<T>> observeAdd(@NonNull final T value);
 
-  public void put(@NonNull List<T> list) {
-    put(list, Schedulers.io());
-  }
+  void add(@NonNull T value);
 
-  public void put(@NonNull List<T> list, @NonNull Scheduler scheduler) {
-    assertNotNull(scheduler, "scheduler");
-    observePut(list).subscribeOn(scheduler).subscribe();
-  }
+  void add(@NonNull T value, @NonNull Scheduler scheduler);
 
-  @NonNull public Observable<List<T>> observe() {
-    return updateSubject.startWith(get().toObservable());
-  }
+  @NonNull Single<List<T>> observeRemove(@NonNull final PredicateFunc<T> predicateFunc);
 
-  @NonNull public Single<List<T>> observeClear() {
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (file.exists() && !file.delete()) {
-              emitter.onError(new IOException("Clear operation on store failed."));
-            } else {
-              emitter.onSuccess(Collections.<T>emptyList());
-              updateSubject.onNext(Collections.<T>emptyList());
-            }
-          }
-        });
-      }
-    });
-  }
+  void remove(@NonNull PredicateFunc<T> predicateFunc);
 
-  public void clear() {
-    clear(Schedulers.io());
-  }
+  void remove(@NonNull Scheduler scheduler, @NonNull PredicateFunc<T> predicateFunc);
 
-  public void clear(@NonNull Scheduler scheduler) {
-    assertNotNull(scheduler, "scheduler");
-    observeClear().subscribeOn(scheduler).subscribe();
-  }
+  @NonNull Single<List<T>> observeRemove(@NonNull final T value);
 
-  @NonNull public Single<List<T>> observeAdd(@NonNull final T value) {
-    assertNotNull(value, "value");
+  void remove(@NonNull final T value);
 
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create file for store."));
-            }
+  void remove(@NonNull final T value, @NonNull Scheduler scheduler);
 
-            List<T> originalList = converter.read(file, type);
-            if (originalList == null) originalList = Collections.emptyList();
+  @NonNull Single<List<T>> observeRemove(final int position);
 
-            List<T> result = new ArrayList<T>(originalList.size() + 1);
-            result.addAll(originalList);
-            result.add(value);
+  void remove(int position);
 
-            converter.write(result, type, file);
-            emitter.onSuccess(result);
-            updateSubject.onNext(result);
-          }
-        });
-      }
-    });
-  }
+  void remove(int position, @NonNull Scheduler scheduler);
 
-  public void add(@NonNull T value) {
-    add(value, Schedulers.io());
-  }
+  @NonNull Single<List<T>> observeReplace(@NonNull final T value,
+      @NonNull final PredicateFunc<T> predicateFunc);
 
-  public void add(@NonNull T value, @NonNull Scheduler scheduler) {
-    assertNotNull(scheduler, "scheduler");
-    observeAdd(value).subscribeOn(scheduler).subscribe();
-  }
+  void replace(@NonNull T value, @NonNull PredicateFunc<T> predicateFunc);
 
-  @NonNull public Single<List<T>> observeRemove(
-      @NonNull final PredicateFunc<T> predicateFunc) {
-    assertNotNull(predicateFunc, "predicateFunc");
+  void replace(@NonNull T value, @NonNull Scheduler scheduler,
+      @NonNull PredicateFunc<T> predicateFunc);
 
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists()) {
-              emitter.onSuccess(Collections.<T>emptyList());
-              return;
-            }
+  @NonNull Single<List<T>> observeAddOrReplace(@NonNull final T value,
+      @NonNull final PredicateFunc<T> predicateFunc);
 
-            List<T> originalList = converter.read(file, type);
-            if (originalList == null) originalList = Collections.emptyList();
+  void addOrReplace(@NonNull T value, @NonNull PredicateFunc<T> predicateFunc);
 
-            int indexOfItemToRemove = -1;
+  void addOrReplace(@NonNull T value, @NonNull Scheduler scheduler,
+      @NonNull PredicateFunc<T> predicateFunc);
 
-            for (int i = 0; i < originalList.size(); i++) {
-              if (predicateFunc.test(originalList.get(i))) {
-                indexOfItemToRemove = i;
-                break;
-              }
-            }
-
-            List<T> modifiedList = new ArrayList<T>(originalList);
-
-            if (indexOfItemToRemove != -1) {
-              modifiedList.remove(indexOfItemToRemove);
-              converter.write(modifiedList, type, file);
-            }
-
-            emitter.onSuccess(modifiedList);
-            updateSubject.onNext(modifiedList);
-          }
-        });
-      }
-    });
-  }
-
-  public void remove(@NonNull PredicateFunc<T> predicateFunc) {
-    remove(Schedulers.io(), predicateFunc);
-  }
-
-  public void remove(@NonNull Scheduler scheduler,
-      @NonNull PredicateFunc<T> predicateFunc) {
-    assertNotNull(scheduler, "scheduler");
-    observeRemove(predicateFunc).subscribeOn(scheduler).subscribe();
-  }
-
-  @NonNull public Single<List<T>> observeRemove(@NonNull final T value) {
-    assertNotNull(value, "value");
-    return observeRemove(new PredicateFunc<T>() {
-      @Override public boolean test(T valueToRemove) {
-        return value.equals(valueToRemove);
-      }
-    });
-  }
-
-  public void remove(@NonNull final T value) {
-    remove(value, Schedulers.io());
-  }
-
-  public void remove(@NonNull final T value, @NonNull Scheduler scheduler) {
-    assertNotNull(scheduler, "scheduler");
-    observeRemove(value).subscribeOn(scheduler).subscribe();
-  }
-
-  @NonNull public Single<List<T>> observeRemove(final int position) {
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            List<T> originalList = converter.read(file, type);
-            if (originalList == null) originalList = Collections.emptyList();
-
-            List<T> modifiedList = new ArrayList<T>(originalList);
-            modifiedList.remove(position);
-
-            converter.write(modifiedList, type, file);
-            emitter.onSuccess(modifiedList);
-            updateSubject.onNext(modifiedList);
-          }
-        });
-      }
-    });
-  }
-
-  public void remove(int position) {
-    remove(position, Schedulers.io());
-  }
-
-  public void remove(int position, @NonNull Scheduler scheduler) {
-    assertNotNull(scheduler, "scheduler");
-    observeRemove(position).subscribeOn(scheduler).subscribe();
-  }
-
-  @NonNull public Single<List<T>> observeReplace(@NonNull final T value,
-      @NonNull final PredicateFunc<T> predicateFunc) {
-    assertNotNull(value, "value");
-    assertNotNull(predicateFunc, "predicateFunc");
-
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists()) {
-              emitter.onSuccess(Collections.<T>emptyList());
-              return;
-            }
-
-            List<T> originalList = converter.read(file, type);
-            if (originalList == null) originalList = Collections.emptyList();
-
-            int indexOfItemToReplace = -1;
-
-            for (int i = 0; i < originalList.size(); i++) {
-              if (predicateFunc.test(originalList.get(i))) {
-                indexOfItemToReplace = i;
-                break;
-              }
-            }
-
-            List<T> modifiedList = new ArrayList<T>(originalList);
-
-            if (indexOfItemToReplace != -1) {
-              modifiedList.remove(indexOfItemToReplace);
-              modifiedList.add(indexOfItemToReplace, value);
-              converter.write(modifiedList, type, file);
-            }
-
-            emitter.onSuccess(modifiedList);
-            updateSubject.onNext(modifiedList);
-          }
-        });
-      }
-    });
-  }
-
-  public void replace(@NonNull T value, @NonNull PredicateFunc<T> predicateFunc) {
-    replace(value, Schedulers.io(), predicateFunc);
-  }
-
-  public void replace(@NonNull T value, @NonNull Scheduler scheduler,
-      @NonNull PredicateFunc<T> predicateFunc) {
-    assertNotNull(scheduler, "scheduler");
-    observeReplace(value, predicateFunc).subscribeOn(scheduler).subscribe();
-  }
-
-  @NonNull public Single<List<T>> observeAddOrReplace(@NonNull final T value,
-      @NonNull final PredicateFunc<T> predicateFunc) {
-    assertNotNull(value, "value");
-    assertNotNull(predicateFunc, "predicateFunc");
-
-    return Single.create(new SingleOnSubscribe<List<T>>() {
-      @Override public void subscribe(final SingleEmitter<List<T>> emitter) throws Exception {
-        runInWriteLock(readWriteLock, new ThrowingRunnable() {
-          @Override public void run() throws Exception {
-            if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create store."));
-              return;
-            }
-
-            List<T> originalList = converter.read(file, type);
-            if (originalList == null) originalList = Collections.emptyList();
-
-            int indexOfItemToReplace = -1;
-
-            for (int i = 0; i < originalList.size(); i++) {
-              if (predicateFunc.test(originalList.get(i))) {
-                indexOfItemToReplace = i;
-                break;
-              }
-            }
-
-            int modifiedListSize = indexOfItemToReplace == -1 ? originalList.size() + 1 :
-                originalList.size();
-
-            List<T> modifiedList = new ArrayList<T>(modifiedListSize);
-            modifiedList.addAll(originalList);
-
-            if (indexOfItemToReplace == -1) {
-              modifiedList.add(value);
-            } else {
-              modifiedList.remove(indexOfItemToReplace);
-              modifiedList.add(indexOfItemToReplace, value);
-            }
-
-            converter.write(modifiedList, type, file);
-            emitter.onSuccess(modifiedList);
-            updateSubject.onNext(modifiedList);
-          }
-        });
-      }
-    });
-  }
-
-  public void addOrReplace(@NonNull T value, @NonNull PredicateFunc<T> predicateFunc) {
-    addOrReplace(value, Schedulers.io(), predicateFunc);
-  }
-
-  public void addOrReplace(@NonNull T value, @NonNull Scheduler scheduler,
-      @NonNull PredicateFunc<T> predicateFunc) {
-    assertNotNull(scheduler, "scheduler");
-    observeAddOrReplace(value, predicateFunc).subscribeOn(scheduler).subscribe();
-  }
-
-  public interface PredicateFunc<T> {
+  interface PredicateFunc<T> {
     boolean test(@NonNull T value);
-  }
-
-  static final class ListType implements ParameterizedType {
-    private final Type wrappedType;
-
-    public ListType(Type wrappedType) {
-      this.wrappedType = wrappedType;
-    }
-
-    @Override public Type[] getActualTypeArguments() {
-      return new Type[] {wrappedType};
-    }
-
-    @Override public Type getOwnerType() {
-      return null;
-    }
-
-    @Override public Type getRawType() {
-      return List.class;
-    }
   }
 }

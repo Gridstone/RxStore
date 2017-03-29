@@ -27,7 +27,7 @@ class ListStoreTest {
   @Rule @JvmField val tempDir = TemporaryFolder().apply { create() }
 
   private fun newTestStore(): ListStore<TestData> =
-      ListStore(tempDir.newFile(), TestData.converter, TestData::class.java)
+      RxStore.list(tempDir.newFile(), TestData.converter, TestData::class.java)
 
   @Test fun getOnEmptyReturnsEmpty() {
     val store = newTestStore()

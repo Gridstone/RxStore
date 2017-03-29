@@ -16,6 +16,7 @@
 
 package au.com.gridstone.rxstore
 
+import au.com.gridstone.rxstore.ValueStore.ValueUpdate
 import com.google.common.truth.Truth.assertThat
 import io.reactivex.schedulers.Schedulers
 import org.junit.Rule
@@ -27,9 +28,9 @@ class ValueStoreTest {
   @Rule @JvmField val tempDir = TemporaryFolder().apply { create() }
 
   private fun newTestStore(): ValueStore<TestData> =
-      ValueStore(tempDir.newFile(), TestData.converter, TestData::class.java)
+      RxStore.value(tempDir.newFile(), TestData.converter, TestData::class.java)
 
-  private fun TestData.asUpdate(): ValueStore.ValueUpdate<TestData> = ValueStore.ValueUpdate(this)
+  private fun TestData.asUpdate(): ValueStore.ValueUpdate<TestData> = ValueUpdate(this)
 
   @Test fun putAndClear() {
     val store = newTestStore()
@@ -72,10 +73,10 @@ class ValueStoreTest {
     store.put(value2, Schedulers.trampoline())
     store.clear(Schedulers.trampoline())
 
-    testObserver.assertValues(ValueStore.ValueUpdate.empty(),
+    testObserver.assertValues(ValueUpdate.empty(),
                               value1.asUpdate(),
                               value2.asUpdate(),
-                              ValueStore.ValueUpdate.empty())
+                              ValueUpdate.empty())
     testObserver.assertNotComplete()
   }
 

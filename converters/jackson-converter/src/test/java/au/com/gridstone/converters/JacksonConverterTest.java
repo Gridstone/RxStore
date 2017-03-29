@@ -17,6 +17,7 @@
 package au.com.gridstone.converters;
 
 import au.com.gridstone.rxstore.ListStore;
+import au.com.gridstone.rxstore.RxStore;
 import au.com.gridstone.rxstore.ValueStore;
 import au.com.gridstone.rxstore.converters.JacksonConverter;
 import io.reactivex.schedulers.Schedulers;
@@ -38,7 +39,7 @@ public final class JacksonConverterTest {
 
   @Test public void convertValue() throws IOException {
     ValueStore<TestData> store =
-        new ValueStore<TestData>(tempDir.newFile(), new JacksonConverter(), TestData.class);
+        RxStore.value(tempDir.newFile(), new JacksonConverter(), TestData.class);
 
     assertThat(store.blockingGet()).isNull();
 
@@ -49,7 +50,7 @@ public final class JacksonConverterTest {
 
   @Test public void convertList() throws IOException {
     ListStore<TestData> store =
-        new ListStore<TestData>(tempDir.newFile(), new JacksonConverter(), TestData.class);
+        RxStore.list(tempDir.newFile(), new JacksonConverter(), TestData.class);
 
     assertThat(store.blockingGet()).isEmpty();
 

@@ -47,7 +47,7 @@ data class TestData(val string: String, val integer: Int) {
         val storedString = file.readText()
         if (storedString.isBlank()) return null
 
-        if (type is ListStore.ListType) {
+        if (type is RealListStore.ListType) {
           // Stored string contains each TestData separated by a "~" character.
           val splitString = storedString.split("~")
           val list = splitString.map { TestData.fromString(it) }

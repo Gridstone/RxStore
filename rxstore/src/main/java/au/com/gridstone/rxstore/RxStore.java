@@ -14,12 +14,24 @@
  * limitations under the License.
  */
 
-package au.com.gridstone.rxstore
+package au.com.gridstone.rxstore;
 
-import java.io.File
+import io.reactivex.annotations.NonNull;
+import java.io.File;
+import java.lang.reflect.Type;
 
-inline fun <reified T : Any> createValueStore(file: File, converter: Converter): ValueStore<T>
-    = RxStore.value(file, converter, T::class.java)
+public class RxStore {
+  private RxStore() {
+    throw new AssertionError("No instances.");
+  }
 
-inline fun <reified T : Any> createListStore(file: File, converter: Converter): ListStore<T>
-    = RxStore.list(file, converter, T::class.java)
+  public static <T> ValueStore<T> value(@NonNull File file, @NonNull Converter converter, @NonNull
+      Type type) {
+    return new RealValueStore<T>(file, converter, type);
+  }
+
+  public static <T> ListStore<T> list(@NonNull File file, @NonNull Converter converter,
+      @NonNull Type type) {
+    return new RealListStore<T>(file, converter, type);
+  }
+}

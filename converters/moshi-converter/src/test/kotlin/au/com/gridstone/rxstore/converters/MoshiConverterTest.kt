@@ -16,8 +16,7 @@
 
 package au.com.gridstone.rxstore.converters
 
-import au.com.gridstone.rxstore.ListStore
-import au.com.gridstone.rxstore.ValueStore
+import au.com.gridstone.rxstore.RxStore
 import com.google.common.truth.Truth.assertThat
 import io.reactivex.schedulers.Schedulers
 import org.junit.Rule
@@ -28,7 +27,7 @@ class MoshiConverterTest {
   @Rule @JvmField val tempDir = TemporaryFolder().apply { create() }
 
   @Test fun convertValue() {
-    val store = ValueStore<TestData>(tempDir.newFile(), MoshiConverter(), TestData::class.java)
+    val store = RxStore.value<TestData>(tempDir.newFile(), MoshiConverter(), TestData::class.java)
     assertThat(store.blockingGet()).isNull()
 
     store.put(TestData("1", 1), Schedulers.trampoline())
@@ -36,7 +35,7 @@ class MoshiConverterTest {
   }
 
   @Test fun convertList() {
-    val store = ListStore<TestData>(tempDir.newFile(), MoshiConverter(), TestData::class.java)
+    val store = RxStore.list<TestData>(tempDir.newFile(), MoshiConverter(), TestData::class.java)
     assertThat(store.blockingGet()).isEmpty()
 
     val list = listOf(TestData("1", 1), TestData("2", 2))
