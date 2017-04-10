@@ -18,7 +18,9 @@ package au.com.gridstone.rxstore;
 
 import android.content.Context;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -255,7 +257,7 @@ public final class StoreProvider {
 
             runInWriteLock(readWriteLock, new Runnable() {
               @Override public void run() {
-                converter.write(value, type, file);
+                converterWrite(value, converter, type, file);
                 subscriber.onSuccess(value);
                 updateSubject.onNext(value);
               }
@@ -345,7 +347,7 @@ public final class StoreProvider {
 
             runInWriteLock(readWriteLock, new Runnable() {
               @Override public void run() {
-                converter.write(null, type, file);
+                converterWrite(null, converter, type, file);
                 subscriber.onSuccess(null);
                 updateSubject.onNext(null);
               }
@@ -456,7 +458,7 @@ public final class StoreProvider {
 
             runInWriteLock(readWriteLock, new Runnable() {
               @Override public void run() {
-                converter.write(value, type, file);
+                converterWrite(null, converter, type, file);
                 subscriber.onSuccess(value);
                 updateSubject.onNext(value);
               }
@@ -548,7 +550,7 @@ public final class StoreProvider {
             runInWriteLock(readWriteLock, new Runnable() {
               @Override public void run() {
                 List<T> emptyList = Collections.emptyList();
-                converter.write(emptyList, type, file);
+                converterWrite(emptyList, converter, type, file);
                 subscriber.onSuccess(emptyList);
                 updateSubject.onNext(emptyList);
               }
@@ -591,7 +593,7 @@ public final class StoreProvider {
                 result.addAll(originalList);
                 result.add(value);
 
-                converter.write(result, type, file);
+                converterWrite(result, converter, type, file);
                 subscriber.onSuccess(result);
                 updateSubject.onNext(result);
               }
@@ -666,7 +668,7 @@ public final class StoreProvider {
                   modifiedList.remove(indexOfItemToRemove);
                 }
 
-                converter.write(modifiedList, type, file);
+                converterWrite(modifiedList, converter, type, file);
                 subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
@@ -705,7 +707,7 @@ public final class StoreProvider {
                 List<T> modifiedList = new ArrayList<T>(originalList);
                 modifiedList.remove(position);
 
-                converter.write(modifiedList, type, file);
+                converterWrite(modifiedList, converter, type, file);
                 subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
@@ -755,7 +757,7 @@ public final class StoreProvider {
                   modifiedList.add(indexOfItemToReplace, value);
                 }
 
-                converter.write(modifiedList, type, file);
+                converterWrite(modifiedList, converter, type, file);
                 subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
@@ -815,7 +817,7 @@ public final class StoreProvider {
                   modifiedList.add(indexOfItemToReplace, value);
                 }
 
-                converter.write(modifiedList, type, file);
+                converterWrite(modifiedList, converter, type, file);
                 subscriber.onSuccess(modifiedList);
                 updateSubject.onNext(modifiedList);
               }
@@ -972,5 +974,12 @@ public final class StoreProvider {
       }
       writeLock.unlock();
     }
+  }
+
+  private static <T> void converterWrite(T value, Converter converter, Type type, File file) {
+    File tmpFile = new File(file.getAbsolutePath() + ".tmp");
+    converter.write(value, type, tmpFile);
+    file.delete();
+    tmpFile.renameTo(file);
   }
 }
