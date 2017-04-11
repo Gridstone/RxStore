@@ -16,12 +16,21 @@
 
 package au.com.gridstone.rxstore;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-final class Locks {
-  private Locks() {
+final class Utils {
+  private Utils() {
     throw new AssertionError("No instances.");
+  }
+
+  static void assertNotNull(Object object, String name) {
+    if (object == null) {
+      throw new NullPointerException(name + "must not be null.");
+    }
   }
 
   static void runInReadLock(ReentrantReadWriteLock readWriteLock, ThrowingRunnable runnable) {
@@ -57,6 +66,16 @@ final class Locks {
         readLock.lock();
       }
       writeLock.unlock();
+    }
+  }
+
+  static <T> void converterWrite(T value, Converter converter, Type type, File file)
+      throws IOException {
+    File tmpFile = new File(file.getAbsolutePath() + ".tmp");
+    converter.write(value, type, tmpFile);
+
+    if (!file.delete() || !tmpFile.renameTo(file)) {
+      throw new IOException("Failed to write value to file.");
     }
   }
 }

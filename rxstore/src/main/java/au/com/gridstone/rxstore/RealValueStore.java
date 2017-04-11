@@ -37,9 +37,10 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static au.com.gridstone.rxstore.Locks.runInReadLock;
-import static au.com.gridstone.rxstore.Locks.runInWriteLock;
-import static au.com.gridstone.rxstore.Preconditions.assertNotNull;
+import static au.com.gridstone.rxstore.Utils.converterWrite;
+import static au.com.gridstone.rxstore.Utils.runInReadLock;
+import static au.com.gridstone.rxstore.Utils.runInWriteLock;
+import static au.com.gridstone.rxstore.Utils.assertNotNull;
 
 final class RealValueStore<T> implements ValueStore<T> {
   private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -89,16 +90,12 @@ final class RealValueStore<T> implements ValueStore<T> {
         runInWriteLock(readWriteLock, new ThrowingRunnable() {
           @Override public void run() throws Exception {
             if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create file for store."));
+              throw new IOException("Could not create file for store.");
             }
 
-            try {
-              WriteWrapper.converterWrite(value, converter, type, file);
-              emitter.onSuccess(value);
-              updateSubject.onNext(new ValueUpdate<T>(value));
-            } catch (IOException e) {
-              emitter.onError(e);
-            }
+            converterWrite(value, converter, type, file);
+            emitter.onSuccess(value);
+            updateSubject.onNext(new ValueUpdate<T>(value));
           }
         });
       }
@@ -133,7 +130,7 @@ final class RealValueStore<T> implements ValueStore<T> {
         runInWriteLock(readWriteLock, new ThrowingRunnable() {
           @Override public void run() throws Exception {
             if (file.exists() && !file.delete()) {
-              emitter.onError(new IOException("Clear operation on store failed."));
+              throw new IOException("Clear operation on store failed.");
             } else {
               emitter.onComplete();
             }
