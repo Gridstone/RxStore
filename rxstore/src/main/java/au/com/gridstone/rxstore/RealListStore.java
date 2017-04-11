@@ -89,9 +89,13 @@ final class RealListStore<T> implements ListStore<T> {
               return;
             }
 
-            converter.write(list, type, file);
-            emitter.onSuccess(list);
-            updateSubject.onNext(list);
+            try {
+              WriteWrapper.converterWrite(list, converter, type, file);
+              emitter.onSuccess(list);
+              updateSubject.onNext(list);
+            } catch (IOException e) {
+              emitter.onError(e);
+            }
           }
         });
       }
@@ -155,9 +159,13 @@ final class RealListStore<T> implements ListStore<T> {
             result.addAll(originalList);
             result.add(value);
 
-            converter.write(result, type, file);
-            emitter.onSuccess(result);
-            updateSubject.onNext(result);
+            try {
+              WriteWrapper.converterWrite(result, converter, type, file);
+              emitter.onSuccess(result);
+              updateSubject.onNext(result);
+            } catch (IOException e) {
+              emitter.onError(e);
+            }
           }
         });
       }
@@ -202,7 +210,12 @@ final class RealListStore<T> implements ListStore<T> {
 
             if (indexOfItemToRemove != -1) {
               modifiedList.remove(indexOfItemToRemove);
-              converter.write(modifiedList, type, file);
+              try {
+                WriteWrapper.converterWrite(modifiedList, converter, type, file);
+              } catch (IOException e) {
+                emitter.onError(e);
+                return;
+              }
             }
 
             emitter.onSuccess(modifiedList);
@@ -252,9 +265,13 @@ final class RealListStore<T> implements ListStore<T> {
             List<T> modifiedList = new ArrayList<T>(originalList);
             modifiedList.remove(position);
 
-            converter.write(modifiedList, type, file);
-            emitter.onSuccess(modifiedList);
-            updateSubject.onNext(modifiedList);
+            try {
+              WriteWrapper.converterWrite(modifiedList, converter, type, file);
+              emitter.onSuccess(modifiedList);
+              updateSubject.onNext(modifiedList);
+            } catch (IOException e) {
+              emitter.onError(e);
+            }
           }
         });
       }
@@ -301,7 +318,12 @@ final class RealListStore<T> implements ListStore<T> {
             if (indexOfItemToReplace != -1) {
               modifiedList.remove(indexOfItemToReplace);
               modifiedList.add(indexOfItemToReplace, value);
-              converter.write(modifiedList, type, file);
+              try {
+                WriteWrapper.converterWrite(modifiedList, converter, type, file);
+              } catch (IOException e) {
+                emitter.onError(e);
+                return;
+              }
             }
 
             emitter.onSuccess(modifiedList);
@@ -361,9 +383,13 @@ final class RealListStore<T> implements ListStore<T> {
               modifiedList.add(indexOfItemToReplace, value);
             }
 
-            converter.write(modifiedList, type, file);
-            emitter.onSuccess(modifiedList);
-            updateSubject.onNext(modifiedList);
+            try {
+              WriteWrapper.converterWrite(modifiedList, converter, type, file);
+              emitter.onSuccess(modifiedList);
+              updateSubject.onNext(modifiedList);
+            } catch (IOException e) {
+              emitter.onError(e);
+            }
           }
         });
       }
