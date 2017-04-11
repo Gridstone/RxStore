@@ -92,9 +92,13 @@ final class RealValueStore<T> implements ValueStore<T> {
               emitter.onError(new IOException("Could not create file for store."));
             }
 
-            converter.write(value, type, file);
-            emitter.onSuccess(value);
-            updateSubject.onNext(new ValueUpdate<T>(value));
+            try {
+              WriteWrapper.converterWrite(value, converter, type, file);
+              emitter.onSuccess(value);
+              updateSubject.onNext(new ValueUpdate<T>(value));
+            } catch (IOException e) {
+              emitter.onError(e);
+            }
           }
         });
       }
