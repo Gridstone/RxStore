@@ -57,7 +57,7 @@ To persist a single `Person`, we must first create `ValueStore`.
 ValueStore<Person> store = storeProvider.valueStore("person", Person.class);
 ```
 
-There are two ways we can add a `Person` to our store: `store.put(person)` or `store.observePut(person)`. `put()` is a fire-and-forget method that will asynchronously write the value to disk. `observePut()` returns an RxJava `Single` that must be subscribed to in order for the write operation to begin. This is useful when incorporating the write operation into a chain, or would like to know when a write operation has completed.
+There are two ways we can add a `Person` to our store: `store.put(person)` or `store.observePut(person)`. `put()` is a fire-and-forget method that will asynchronously write the value to disk. `observePut()` returns an RxJava `Single` that must be subscribed to in order for the write operation to begin. This is useful when incorporating the write operation into a chain, or you would like to know when a write operation has completed.
 
 Perhaps you're making use of Square's [Retrofit](http://square.github.io/retrofit/). You could download and persist data in a single rx chain.
 
