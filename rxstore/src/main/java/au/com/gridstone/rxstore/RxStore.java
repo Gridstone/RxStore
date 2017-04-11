@@ -17,19 +17,21 @@
 package au.com.gridstone.rxstore;
 
 import io.reactivex.annotations.NonNull;
-import io.reactivex.annotations.Nullable;
 import java.io.File;
 import java.lang.reflect.Type;
 
-public interface Converter {
-  /**
-   * Convert data into a serializable format and write to writer.
-   */
-  <T> void write(@Nullable T data, @NonNull Type type, @NonNull File file)
-      throws ConverterException;
+public class RxStore {
+  private RxStore() {
+    throw new AssertionError("No instances.");
+  }
 
-  /**
-   * Pull typed data out of reader.
-   */
-  @Nullable <T> T read(@NonNull File file, @NonNull Type type) throws ConverterException;
+  public static <T> ValueStore<T> value(@NonNull File file, @NonNull Converter converter, @NonNull
+      Type type) {
+    return new RealValueStore<T>(file, converter, type);
+  }
+
+  public static <T> ListStore<T> list(@NonNull File file, @NonNull Converter converter,
+      @NonNull Type type) {
+    return new RealListStore<T>(file, converter, type);
+  }
 }

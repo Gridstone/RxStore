@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2016
+ * Copyright (C) GRIDSTONE 2017
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,10 @@
 
 package au.com.gridstone.rxstore
 
-import au.com.gridstone.rxstore.StoreProvider.ListStore
-import au.com.gridstone.rxstore.StoreProvider.ValueStore
+import java.io.File
 
-inline fun <reified T : Any> StoreProvider.valueStore(key: String): ValueStore<T> {
-  return valueStore(key, T::class.java)
-}
+inline fun <reified T : Any> createValueStore(file: File, converter: Converter): ValueStore<T>
+    = RxStore.value(file, converter, T::class.java)
 
-inline fun <reified T : Any> StoreProvider.listStore(key: String): ListStore<T> {
-  return listStore(key, T::class.java)
-}
+inline fun <reified T : Any> createListStore(file: File, converter: Converter): ListStore<T>
+    = RxStore.list(file, converter, T::class.java)

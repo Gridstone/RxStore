@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2016
+ * Copyright (C) GRIDSTONE 2017
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,54 +16,47 @@
 
 package au.com.gridstone.converters;
 
-import au.com.gridstone.rxstore.StoreProvider;
-import au.com.gridstone.rxstore.StoreProvider.ListStore;
-import au.com.gridstone.rxstore.StoreProvider.ValueStore;
+import au.com.gridstone.rxstore.ListStore;
+import au.com.gridstone.rxstore.RxStore;
+import au.com.gridstone.rxstore.ValueStore;
 import au.com.gridstone.rxstore.converters.JacksonConverter;
+import io.reactivex.schedulers.Schedulers;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import rx.schedulers.Schedulers;
 
 import static com.google.common.truth.Truth.assertThat;
 
+/**
+ * This must remain as Java rather than Kotlin because vanilla Jackson seems to have issues with
+ * Kotlin's data classes.
+ */
 public final class JacksonConverterTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
-  private StoreProvider storeProvider;
+  @Test public void convertValue() throws IOException {
+    ValueStore<TestData> store =
+        RxStore.value(tempDir.newFile(), new JacksonConverter(), TestData.class);
 
-  @Before public void setup() throws IOException {
-    storeProvider = StoreProvider.with(tempDir.newFolder("jacksonTest"))
-        .schedulingWith(Schedulers.immediate())
-        .using(new JacksonConverter());
-  }
-
-  @Test public void convertValue() {
-    ValueStore<TestData> store = storeProvider.valueStore("value", TestData.class);
-    assertThat(store.getBlocking()).isNull();
+    assertThat(store.blockingGet()).isNull();
 
     TestData value = new TestData("Test1", 1);
-    store.put(value);
-    assertThat(store.getBlocking()).isEqualTo(value);
-
-    store.clear();
-    assertThat(store.getBlocking()).isNull();
+    store.put(value, Schedulers.trampoline());
+    assertThat(store.blockingGet()).isEqualTo(value);
   }
 
-  @Test public void convertList() {
-    ListStore<TestData> store = storeProvider.listStore("list", TestData.class);
-    assertThat(store.getBlocking()).isEmpty();
+  @Test public void convertList() throws IOException {
+    ListStore<TestData> store =
+        RxStore.list(tempDir.newFile(), new JacksonConverter(), TestData.class);
+
+    assertThat(store.blockingGet()).isEmpty();
 
     List<TestData> list = Arrays.asList(new TestData("Test1", 1), new TestData("Test2", 2));
-    store.put(list);
-    assertThat(store.getBlocking()).isEqualTo(list);
-
-    store.clear();
-    assertThat(store.getBlocking()).isEmpty();
+    store.put(list, Schedulers.trampoline());
+    assertThat(store.blockingGet()).isEqualTo(list);
   }
 
   public static class TestData {

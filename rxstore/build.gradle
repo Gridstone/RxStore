@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2016
+ * Copyright (C) GRIDSTONE 2017
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ buildscript {
   }
 
   dependencies {
-    classpath rootProject.ext.gradleExtraConfig
+    classpath rootProject.ext.kotlinPlugin
   }
 }
 
@@ -28,8 +28,8 @@ plugins {
   id 'com.jfrog.bintray' version '1.6'
 }
 
-apply plugin: 'optional-base'
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.6
@@ -37,12 +37,10 @@ targetCompatibility = 1.6
 
 dependencies {
   compile rootProject.ext.rxJava
-  compile rootProject.ext.jetbrainsAnnotations
 
   testCompile rootProject.ext.junit
   testCompile rootProject.ext.truth
-
-  compile group: 'com.google.android', name: 'android', version: '4.1.1.4', optional
+  testCompile rootProject.ext.kotlinStdlib
 }
 
 task javadocJar(type: Jar) {
