@@ -37,7 +37,7 @@ allprojects {
 }
 
 ext {
-  rxJava = 'io.reactivex.rxjava2:rxjava:2.0.7'
+  rxJava = 'io.reactivex.rxjava2:rxjava:2.0.8'
   junit = 'junit:junit:4.12'
   truth = 'com.google.truth:truth:0.32'
   gson = 'com.google.code.gson:gson:2.8.0'
