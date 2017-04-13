@@ -33,9 +33,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static au.com.gridstone.rxstore.Locks.runInReadLock;
-import static au.com.gridstone.rxstore.Locks.runInWriteLock;
-import static au.com.gridstone.rxstore.Preconditions.assertNotNull;
+import static au.com.gridstone.rxstore.Utils.converterWrite;
+import static au.com.gridstone.rxstore.Utils.runInReadLock;
+import static au.com.gridstone.rxstore.Utils.runInWriteLock;
+import static au.com.gridstone.rxstore.Utils.assertNotNull;
 
 final class RealListStore<T> implements ListStore<T> {
   private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -85,17 +86,12 @@ final class RealListStore<T> implements ListStore<T> {
         runInWriteLock(readWriteLock, new ThrowingRunnable() {
           @Override public void run() throws Exception {
             if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create file for store."));
-              return;
+              throw new IOException("Could not create file for store.");
             }
 
-            try {
-              WriteWrapper.converterWrite(list, converter, type, file);
-              emitter.onSuccess(list);
-              updateSubject.onNext(list);
-            } catch (IOException e) {
-              emitter.onError(e);
-            }
+            converterWrite(list, converter, type, file);
+            emitter.onSuccess(list);
+            updateSubject.onNext(list);
           }
         });
       }
@@ -121,11 +117,11 @@ final class RealListStore<T> implements ListStore<T> {
         runInWriteLock(readWriteLock, new ThrowingRunnable() {
           @Override public void run() throws Exception {
             if (file.exists() && !file.delete()) {
-              emitter.onError(new IOException("Clear operation on store failed."));
-            } else {
-              emitter.onSuccess(Collections.<T>emptyList());
-              updateSubject.onNext(Collections.<T>emptyList());
+              throw new IOException("Clear operation on store failed.");
             }
+
+            emitter.onSuccess(Collections.<T>emptyList());
+            updateSubject.onNext(Collections.<T>emptyList());
           }
         });
       }
@@ -149,7 +145,7 @@ final class RealListStore<T> implements ListStore<T> {
         runInWriteLock(readWriteLock, new ThrowingRunnable() {
           @Override public void run() throws Exception {
             if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create file for store."));
+              throw new IOException("Could not create file for store.");
             }
 
             List<T> originalList = converter.read(file, type);
@@ -159,13 +155,9 @@ final class RealListStore<T> implements ListStore<T> {
             result.addAll(originalList);
             result.add(value);
 
-            try {
-              WriteWrapper.converterWrite(result, converter, type, file);
-              emitter.onSuccess(result);
-              updateSubject.onNext(result);
-            } catch (IOException e) {
-              emitter.onError(e);
-            }
+            converterWrite(result, converter, type, file);
+            emitter.onSuccess(result);
+            updateSubject.onNext(result);
           }
         });
       }
@@ -210,12 +202,7 @@ final class RealListStore<T> implements ListStore<T> {
 
             if (indexOfItemToRemove != -1) {
               modifiedList.remove(indexOfItemToRemove);
-              try {
-                WriteWrapper.converterWrite(modifiedList, converter, type, file);
-              } catch (IOException e) {
-                emitter.onError(e);
-                return;
-              }
+              converterWrite(modifiedList, converter, type, file);
             }
 
             emitter.onSuccess(modifiedList);
@@ -265,13 +252,9 @@ final class RealListStore<T> implements ListStore<T> {
             List<T> modifiedList = new ArrayList<T>(originalList);
             modifiedList.remove(position);
 
-            try {
-              WriteWrapper.converterWrite(modifiedList, converter, type, file);
-              emitter.onSuccess(modifiedList);
-              updateSubject.onNext(modifiedList);
-            } catch (IOException e) {
-              emitter.onError(e);
-            }
+            converterWrite(modifiedList, converter, type, file);
+            emitter.onSuccess(modifiedList);
+            updateSubject.onNext(modifiedList);
           }
         });
       }
@@ -318,12 +301,7 @@ final class RealListStore<T> implements ListStore<T> {
             if (indexOfItemToReplace != -1) {
               modifiedList.remove(indexOfItemToReplace);
               modifiedList.add(indexOfItemToReplace, value);
-              try {
-                WriteWrapper.converterWrite(modifiedList, converter, type, file);
-              } catch (IOException e) {
-                emitter.onError(e);
-                return;
-              }
+              converterWrite(modifiedList, converter, type, file);
             }
 
             emitter.onSuccess(modifiedList);
@@ -354,8 +332,7 @@ final class RealListStore<T> implements ListStore<T> {
         runInWriteLock(readWriteLock, new ThrowingRunnable() {
           @Override public void run() throws Exception {
             if (!file.exists() && !file.createNewFile()) {
-              emitter.onError(new IOException("Could not create store."));
-              return;
+              throw new IOException("Could not create store.");
             }
 
             List<T> originalList = converter.read(file, type);
@@ -383,13 +360,9 @@ final class RealListStore<T> implements ListStore<T> {
               modifiedList.add(indexOfItemToReplace, value);
             }
 
-            try {
-              WriteWrapper.converterWrite(modifiedList, converter, type, file);
-              emitter.onSuccess(modifiedList);
-              updateSubject.onNext(modifiedList);
-            } catch (IOException e) {
-              emitter.onError(e);
-            }
+            converterWrite(modifiedList, converter, type, file);
+            emitter.onSuccess(modifiedList);
+            updateSubject.onNext(modifiedList);
           }
         });
       }
