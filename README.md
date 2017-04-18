@@ -35,7 +35,7 @@ public final class Person {
 }
 ```
 
-To persist a single `Person`, we must first create `ValueStore`.
+To persist a single `Person`, we must first create a `ValueStore`.
 
 ```java
 ValueStore<Person> store = RxStore.value(file, converter, Person.class);
