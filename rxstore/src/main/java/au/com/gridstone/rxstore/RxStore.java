@@ -20,16 +20,30 @@ import io.reactivex.annotations.NonNull;
 import java.io.File;
 import java.lang.reflect.Type;
 
+/**
+ * Facilitates the read and write of objects to and from disk using RxJava and observing changes
+ * over time.
+ * <p>
+ * To create a store for a single object use {@link #value(File, Converter, Type)}.
+ * <p>
+ * For {@code Lists} of objects use {@link #list(File, Converter, Type)}.
+ */
 public class RxStore {
   private RxStore() {
     throw new AssertionError("No instances.");
   }
 
+  /**
+   * Create a new {@link ValueStore} that is capable of persisting a single object to disk.
+   */
   public static <T> ValueStore<T> value(@NonNull File file, @NonNull Converter converter, @NonNull
       Type type) {
     return new RealValueStore<T>(file, converter, type);
   }
 
+  /**
+   * Create a new {@link ListStore} that is capable of persisting many objects to disk.
+   */
   public static <T> ListStore<T> list(@NonNull File file, @NonNull Converter converter,
       @NonNull Type type) {
     return new RealListStore<T>(file, converter, type);

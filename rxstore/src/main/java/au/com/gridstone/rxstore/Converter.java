@@ -21,6 +21,9 @@ import io.reactivex.annotations.Nullable;
 import java.io.File;
 import java.lang.reflect.Type;
 
+/**
+ * Convert objects to and from serializable formats and read/write them from disk.
+ */
 public interface Converter {
   /**
    * Convert data into a serializable format and write to writer.

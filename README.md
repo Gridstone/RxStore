@@ -1,5 +1,5 @@
 RxStore
-=====
+=======
 
 A tiny library that assists in saving and restoring objects to and from disk using [RxJava](https://github.com/ReactiveX/RxJava), and observing changes over time.
 
@@ -14,83 +14,74 @@ We have found this particularly useful on Android, where there are [many options
 * Elaborate interconnected data sets? [SQLite](http://developer.android.com/reference/android/database/sqlite/SQLiteOpenHelper.html) can help you.
 * Everything else? We just want to put and get objects from disk with minimal overhead.
 
-By design, RxStore lets you use whatever serialization format you prefer, so long as you provide a valid [`Converter`](https://github.com/Gridstone/RxStore/blob/master/rxstore/src/main/java/au/com/gridstone/rxstore/Converter.java). Converters for [Moshi](https://github.com/square/moshi), [Gson](https://code.google.com/p/google-gson/) and [Jackson](https://github.com/ReactiveX/RxAndroid) are provided out of the box, and pull requests for more are always welcome!
+By design, RxStore lets you use whatever serialization format you prefer, so long as you provide a valid [`Converter`](https://github.com/Gridstone/RxStore/blob/master/rxstore/src/main/java/au/com/gridstone/rxstore/Converter.java). Converters for [Moshi](https://github.com/square/moshi), [Gson](https://code.google.com/p/google-gson/) and [Jackson](https://github.com/FasterXML/jackson) are provided out of the box, and pull requests for more are always welcome!
 
 Leaning on RxJava, RxStore can help alleviate some threading concerns when reading and writing to disk, and allows for some pretty nifty method chaining once the operation completes. It also lets you observe changes as you write new values into stores.
 
 Usage
 -----
 
-####Setting up stores
+### Creating Stores
 
-In RxStore, there are two kinds of stores: `ValueStores` and `ListStores`. A `ValueStore` lets you write, read, and observe changes to a single value you want to persist. A `ListStore` does the same but for many values, and has convenience methods for adding and removing individual items in the list.
-
-Stores represent a `File` on disk where your data will be persisted. To get a store, you must first create a `StoreProvider`. A `StoreProvider` represents a directory on disk that can house many store files. You can create an instance using the builder:
-
-```java
-StoreProvider storeProvider = StoreProvider.with(directory).using(new MoshiConverter());
-```
-
-Or if you're on Android and you would like a convenient way to initialise a `StoreProvider` in a subdirectory of your app's private directory, you can use:
-
-```java
-StoreProvider storeProvider = StoreProvider.withContext(context).inDir("mySubDir").using(new MoshiConverter());
-```
-
-Both builders also allow you to specify a `Scheduler` you would like async read/writes to occur on. By default they will create a new `Scheduler` running on a single thread to ensure that events are delivered in chronological sequence.
-
-####Storing data
-
-RxStore supports simple put/get operations for individual objects as well as append/remove operations for `Lists` of objects. All objects/lists are stored against a String key. That key is used to create a file in your previously specified directory.
+There are two kinds of stores:
+ - `ValueStore` lets you write, read, and observe changes to a single value you want to persist.
+ - `ListStore` does the same but for many values, and has convenience methods for adding and removing individual items in the list.
 
 Say we have a model class called `Person`
 ```java
 public final class Person {
-	public final String name;
-	public final int age;
+  public final String name;
+  public final int age;
 }
 ```
 
-To persist a single `Person`, we must first create `ValueStore`.
+To persist a single `Person`, we must first create a `ValueStore`.
 
 ```java
-ValueStore<Person> store = storeProvider.valueStore("person", Person.class);
+ValueStore<Person> store = RxStore.value(file, converter, Person.class);
 ```
+
+In addition to the type we must also provide a `File` and a `Converter`. The `File` gives the object a place to live on disk, and the `Converter` dictates how it's saved and restored. You can make your own `Converter` or use [one we prepared earlier](https://github.com/Gridstone/RxStore/tree/master/converters).
+
+### Storing Data
 
 There are two ways we can add a `Person` to our store: `store.put(person)` or `store.observePut(person)`. `put()` is a fire-and-forget method that will asynchronously write the value to disk. `observePut()` returns an RxJava `Single` that must be subscribed to in order for the write operation to begin. This is useful when incorporating the write operation into a chain, or would like to know when a write operation has completed.
 
-Perhaps you're making use of Square's [Retrofit](http://square.github.io/retrofit/). You could download and persist data in a single rx chain.
+Perhaps you're making use of Square's [Retrofit](http://square.github.io/retrofit/). You could download and persist data in a single Rx chain.
 
 ```java
 webServices.getPerson()
-    .flatMap((person) -> store.put("person", person).toObservable())
+    .flatMap((person) -> store.observePut(person))
     .subscribe((person) -> {
       // Do something with newly downloaded and persisted person.
     });
 ```
 
-`ListStore` also has some handy methods such as `addToList(person)` or `removeFromList(person)` if you wanted to store a collection of people.
+`ListStore` is useful if you wanted to store many people. In addition to `put(people)` it also has some handy methods such as `add(person)` and `remove(person)`.
 
-####Retrieving data
+### Retrieving Data
 
-When retrieving a value, we can use `store.get()` or `store.getBlocking()`. The former returning a `Single`, the latter blocking until the disk read and deserialisation is complete.
+When retrieving from a `ValueStore` we can use `store.get()` or `store.blockingGet()`. The former returns a `Maybe`, as there may not be a current value. The latter blocks until the disk read and deserialization is complete, and returns a nullable value.
 
-It's worth noting that a `ValueStore` that has been cleared or not yet given a value will return `null` on `getBlocking()` and `null` for the value delivered in the `Single` from `get()`.
+`ListStore` behaves slightly differently. `get()` returns a `Single`, as empty stores can be represented by an immutable empty `List`. `blockingGet()` will always return a non-null `List`.
 
-A `ListStore` that has been cleared or not yet given a value will return an immutable empty `List`.
 
-####Observing data
+### Observing Data
 
-Another handy trick is to observe a store change over time. Calling `store.asObservable()` will give you an rx `Observable`. This `Observable` will immediately deliver the current value of the store on subscription, and will then deliver updated values if changes occur in `onNext()`. `onCompleted()` will only be called if the store is deleted.
+Another handy trick is to observe a store change over time. Calling `store.observe()` will give you an Rx `Observable`. This `Observable` will immediately deliver the current value of the store upon subscription, and will then deliver updated values if changes occur in `onNext()`.
+
+It's worth noting that `valueStore.observe()` does not return `Observable<T>`, but rather `Observable<ValueUpdate<T>>`. This is because the store cannot use null to represent the absence of a value, and must wrap the update in a non-null object.
+
+`listStore.observe()` however does return `Observable<List<T>>`, as an empty `ListStore` can be represented by an immutable empty `List`.
 
 Kotlin
 ------
 
-If you're working in Kotlin, there are also two convenience extension functions provided in the `rxstore-kotlin` artifact that make use of reified type parameters. This removes the need to pass the `Type` in the store initialisation methods.
+If you're working in Kotlin, there are also two convenient functions provided in the `rxstore-kotlin` artifact that make use of reified type parameters. This removes the need to pass the `Type` in the store initialisation methods.
 
 ```kotlin
-val personStore = storeProvider.valueStore<Person>("singlePerson")
-val peopleStore = storeProvider.listStore<Person>("manyPeople")
+val personStore = storeProvider.valueStore<Person>(file, converter)
+val peopleStore = storeProvider.listStore<Person>(file, converter)
 ```
 
 Download
@@ -122,7 +113,7 @@ compile 'au.com.gridstone.rxstore:converter-jackson:5.1.1'
 License
 --------
 
-    Copyright 2016 GRIDSTONE
+    Copyright 2017 GRIDSTONE
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
