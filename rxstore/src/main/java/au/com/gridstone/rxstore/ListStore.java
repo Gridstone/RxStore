@@ -28,21 +28,21 @@ import java.util.List;
  */
 public interface ListStore<T> {
   /**
-   * Retrieve the current {@code List} from disk using Rx. If this store has not had any values
-   * written then an empty immutable {@code List} is returned by this {@link Single}.
+   * Retrieve the current {@code List} from this store using Rx. If this store has not had any
+   * values written then an empty immutable {@code List} is returned by this {@link Single}.
    */
   @NonNull Single<List<T>> get();
 
   /**
-   * Retrieve the current {@code List} from disk in a blocking manner. This may take time. If the
-   * store has not yet had any values written to it then this method returns an empty immutable
+   * Retrieve the current {@code List} from this store in a blocking manner. This may take time. If
+   * the store has not yet had any values written to it then this method returns an empty immutable
    * {@code List}.
    */
   @NonNull List<T> blockingGet();
 
   /**
-   * Write a {@code List} to disk and observe the operation. The {@code List} returned in the {@link
-   * Single} is the {@code List} written to disk, making this useful for chaining.
+   * Write a {@code List} to this store and observe the operation. The {@code List} returned in the
+   * {@link Single} is the {@code List} written to this store, making this useful for chaining.
    */
   @NonNull Single<List<T>> observePut(@NonNull final List<T> list);
 
@@ -91,8 +91,8 @@ public interface ListStore<T> {
    * Add an item to the stored {@code List} and observe the operation. This will create a new {@code
    * List} if one does not currently exist.
    * <p>
-   * The {@code List} returned by the {@link Single} is the {@code List} written to disk, making
-   * this useful for chaining.
+   * The {@code List} returned by the {@link Single} is the {@code List} written to this store,
+   * making this useful for chaining.
    */
   @NonNull Single<List<T>> observeAdd(@NonNull final T value);
 
@@ -112,8 +112,8 @@ public interface ListStore<T> {
    * Attempt to remove an item from the {@code List} and observe the operation. This method removes
    * the first item for which the predicate function returns true.
    * <p>
-   * The {@code List} returned by the {@link Single} is the modified {@code List} written to disk,
-   * making this useful for chaining.
+   * The {@code List} returned by the {@link Single} is the modified {@code List} written to this
+   * store, making this useful for chaining.
    */
   @NonNull Single<List<T>> observeRemove(@NonNull final PredicateFunc<T> predicateFunc);
 
@@ -136,8 +136,8 @@ public interface ListStore<T> {
    * Attempt to remove an item from the {@code List} and observe the operation. This method removes
    * the first item that {@code .equals()} the specified value.
    * <p>
-   * The {@code List} returned by the {@link Single} is the modified {@code List} written to disk,
-   * making this useful for chaining.
+   * The {@code List} returned by the {@link Single} is the modified {@code List} written to this
+   * store, making this useful for chaining.
    */
   @NonNull Single<List<T>> observeRemove(@NonNull final T value);
 
@@ -159,8 +159,8 @@ public interface ListStore<T> {
   /**
    * Remove the item from the {@code List} at the specified position and observe the operation.
    * <p>
-   * The {@code List} returned by the {@link Single} is the modified {@code List} written to disk,
-   * making this useful for chaining.
+   * The {@code List} returned by the {@link Single} is the modified {@code List} written to this
+   * store, making this useful for chaining.
    */
   @NonNull Single<List<T>> observeRemove(final int position);
 
@@ -181,8 +181,8 @@ public interface ListStore<T> {
    * Attempt to replace an item from the {@code List} and observe the operation. This method
    * replaces the first item for which the predicate function returns true.
    * <p>
-   * The {@code List} returned by the {@link Single} is the modified {@code List} written to disk,
-   * making this useful for chaining.
+   * The {@code List} returned by the {@link Single} is the modified {@code List} written to this
+   * store, making this useful for chaining.
    */
   @NonNull Single<List<T>> observeReplace(@NonNull final T value,
       @NonNull final PredicateFunc<T> predicateFunc);
@@ -208,8 +208,8 @@ public interface ListStore<T> {
    * the first item in the {@code List} for which the predicate function returns true. If no items
    * qualify then the item is appended to the end of the {@code List}.
    * <p>
-   * The {@code List} returned by the {@link Single} is the modified {@code List} written to disk,
-   * making this useful for chaining.
+   * The {@code List} returned by the {@link Single} is the modified {@code List} written to this
+   * store, making this useful for chaining.
    */
   @NonNull Single<List<T>> observeAddOrReplace(@NonNull final T value,
       @NonNull final PredicateFunc<T> predicateFunc);

@@ -6,7 +6,7 @@ A tiny library that assists in saving and restoring objects to and from disk usi
 Details
 -------
 
-RxStore is a simple persistence framework for those already making use of RxJava in their projects. There are many occasions where you don't need the complexity introduced by a database; you just require a simple put/get API.
+RxStore is a simple persistence framework for those already making use of RxJava2 in their projects. There are many occasions where you don't need the complexity introduced by a database; you just require a simple put/get API.
 
 We have found this particularly useful on Android, where there are [many options](http://developer.android.com/guide/topics/data/data-storage.html), but none of them quite right...
 

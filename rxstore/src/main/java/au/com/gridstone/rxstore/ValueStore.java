@@ -30,20 +30,20 @@ import io.reactivex.schedulers.Schedulers;
  */
 public interface ValueStore<T> {
   /**
-   * Retrieve the current value from disk using Rx. If this store has not had a value written
+   * Retrieve the current value from this store using Rx. If this store has not had a value written
    * then the returned {@link Maybe} completes without a value.
    */
   @NonNull Maybe<T> get();
 
   /**
-   * Retrieve the current value from disk in a blocking manner. This may take time. If the store has
-   * not yet had a value written then this method returns null.
+   * Retrieve the current value from this store in a blocking manner. This may take time. If the
+   * store has not yet had a value written then this method returns null.
    */
   @Nullable T blockingGet();
 
   /**
-   * Write an object to disk and observe the operation. The value returned in the {@link Single} is
-   * the value written to disk, making it useful for chaining.
+   * Write an object to this store and observe the operation. The value returned in the {@link
+   * Single} is the value written to this store, making it useful for chaining.
    */
   @NonNull Single<T> observePut(@NonNull final T value);
 
