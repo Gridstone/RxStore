@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2016
+ * Copyright (C) GRIDSTONE 2017
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-include ':rxstore'
-include ':rxstore-kotlin'
-include ':converters:gson-converter'
-include ':converters:jackson-converter'
-include ':converters:moshi-converter'
-include ':sample'
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+  compile project(':rxstore')
+  compile project(':converters:moshi-converter')
+}
