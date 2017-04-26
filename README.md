@@ -3,6 +3,8 @@ RxStore
 
 A tiny library that assists in saving and restoring objects to and from disk using [RxJava](https://github.com/ReactiveX/RxJava), and observing changes over time.
 
+This library now targets RxJava2. If you're using RxJava1 then take a look at a [version 5.1.1](https://github.com/Gridstone/RxStore/tree/v5.1.1).
+
 Details
 -------
 
