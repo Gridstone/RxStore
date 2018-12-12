@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2016
+ * Copyright (C) GRIDSTONE 2018
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
 dependencies {
-  compile rootProject.ext.kotlinStdlib
-  compile project(':rxstore')
+  implementation rootProject.ext.kotlinStdlib
+  api project(':rxstore')
 }
 
 defaultTasks 'jar'
