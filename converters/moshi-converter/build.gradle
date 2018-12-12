@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2017
+ * Copyright (C) GRIDSTONE 2018
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,12 +40,13 @@ repositories {
 }
 
 dependencies {
-  compile project(':rxstore')
-  compile rootProject.ext.moshi
+  api project(':rxstore')
+  implementation rootProject.ext.moshi
+  implementation rootProject.ext.rxJava
 
-  testCompile rootProject.ext.junit
-  testCompile rootProject.ext.truth
-  testCompile rootProject.ext.kotlinStdlib
+  testImplementation rootProject.ext.junit
+  testImplementation rootProject.ext.truth
+  testImplementation rootProject.ext.kotlinStdlib
 }
 
 task javadocJar(type: Jar) {

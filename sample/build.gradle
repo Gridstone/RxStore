@@ -20,6 +20,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-  compile project(':rxstore')
-  compile project(':converters:moshi-converter')
+  implementation rootProject.ext.rxJava
+  implementation project(':rxstore')
+  implementation project(':converters:moshi-converter')
 }

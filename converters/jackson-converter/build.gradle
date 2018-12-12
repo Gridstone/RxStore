@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2016
+ * Copyright (C) GRIDSTONE 2018
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ plugins {
 }
 
 apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.6
@@ -29,11 +30,12 @@ repositories {
 }
 
 dependencies {
-  compile project(':rxstore')
-  compile rootProject.ext.jackson
+  api project(':rxstore')
+  implementation rootProject.ext.jackson
+  implementation rootProject.ext.rxJava
 
-  testCompile rootProject.ext.junit
-  testCompile rootProject.ext.truth
+  testImplementation rootProject.ext.junit
+  testImplementation rootProject.ext.truth
 }
 
 task javadocJar(type: Jar) {

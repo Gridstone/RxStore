@@ -1,5 +1,5 @@
 /*
- * Copyright (C) GRIDSTONE 2017
+ * Copyright (C) GRIDSTONE 2018
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,13 +37,12 @@ allprojects {
 }
 
 ext {
-  rxJava = 'io.reactivex.rxjava2:rxjava:2.0.8'
+  rxJava = 'io.reactivex.rxjava2:rxjava:2.2.4'
   junit = 'junit:junit:4.12'
-  truth = 'com.google.truth:truth:0.32'
-  gson = 'com.google.code.gson:gson:2.8.0'
-  jackson = 'com.fasterxml.jackson.core:jackson-databind:2.8.7'
-  moshi = 'com.squareup.moshi:moshi:1.4.0'
-  bintrayVersion = '1.3.1'
-  kotlinPlugin = 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.1'
-  kotlinStdlib = 'org.jetbrains.kotlin:kotlin-stdlib:1.1.1'
+  truth = 'com.google.truth:truth:0.42'
+  gson = 'com.google.code.gson:gson:2.8.5'
+  jackson = 'com.fasterxml.jackson.core:jackson-databind:2.9.7'
+  moshi = 'com.squareup.moshi:moshi:1.8.0'
+  kotlinPlugin = 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.11'
+  kotlinStdlib = 'org.jetbrains.kotlin:kotlin-stdlib:1.3.11'
 }
