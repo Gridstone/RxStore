@@ -1,5 +1,11 @@
 Change Log
 ==========
+Version 6.0.1 *(2019-05-10)*
+----------------------------
+* Update to Gradle 5.0.
+* Bump dependency versions.
+* Add instructions for using library with RxJava1 to README.
+
 Version 6.0.0 *(2017-04-19)*
 ----------------------------
 * Migrate to RxJava2. (Thanks @Altoyyr)

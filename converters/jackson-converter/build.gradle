@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-plugins {
-  id 'com.jfrog.bintray' version '1.6'
+buildscript {
+  repositories {
+    jcenter()
+  }
+
+  dependencies {
+    classpath rootProject.ext.kotlinPlugin
+    classpath rootProject.ext.bintrayPlugin
+  }
 }
 
 apply plugin: 'java'
 apply plugin: 'java-library'
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
