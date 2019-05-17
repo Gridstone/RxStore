@@ -1,5 +1,9 @@
 Change Log
 ==========
+Version 6.0.2 *(2019-05-17)*
+----------------------------
+* Bump gradle and kotlin gradle plugin versions.
+
 Version 6.0.1 *(2019-05-10)*
 ----------------------------
 * Update to Gradle 5.0.
