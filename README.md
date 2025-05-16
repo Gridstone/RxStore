@@ -1,5 +1,7 @@
-RxStore
-=======
+RxStore (Deprecated ⚠️)
+-------
+
+This library is deprecated. Please migrate to [KStore](https://github.com/xxfast/KStore) and use [kotlinx-coroutines-rx2](https://github.com/Kotlin/kotlinx.coroutines/tree/master/reactive/kotlinx-coroutines-rx2) adapters
 
 A tiny library that assists in saving and restoring objects to and from disk using [RxJava](https://github.com/ReactiveX/RxJava), and observing changes over time.
 
